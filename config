@@ -74,7 +74,8 @@ for_window [app_id="clipse"] floating enable, move position center, resize set 8
 
 #keybinds function
 
-bindsym $mod+Escape exec bash -c 'swaylock && sleep 0.2 && systemctl suspend'
+bindsym $mod+Escape exec bash -lc 'swaylock -f && sleep 0.3 && systemctl suspend'
+bindsym $mod+Shift+r exec $term -e bash -lc reboot 
 
 bindsym $mod+Shift+u exec $term -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
     #always run rebuild after pixymon update
