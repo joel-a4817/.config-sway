@@ -1,9 +1,9 @@
+
 # Default config for sway
 #
 # Copy this to ~/.config/sway/config and edit it to your liking.
 #
 # Read `man 5 sway` for a complete reference.
-
 
 ### Variables
 #
@@ -18,6 +18,17 @@ set $right l
 set $term foot
 # Your preferred application launcher
 set $menu wmenu-run
+
+# --- Popup terminals (float + center + size) ---
+# Any foot window whose title starts with "popup-" will float, center, and size.
+# You can change px to ppt if desired (see man 5 sway resize set).  [1](https://github.com/qtile/qtile/blob/master/docs/manual/config/keys.rst)
+set $popup_prefix popup
+set $popup_w 1000   # width in px
+set $popup_h 700    # height in px
+for_window [app_id="foot" title="^$popup_prefix-.*"] \
+    floating enable, \
+    move position center, \
+    resize set $popup_w px $popup_h px
 
 ### Output configuration
 #
@@ -60,33 +71,33 @@ output * bg ~/.config/sway/mcqueen.jpeg fill
    }
 
    input type:mouse {
-	accel_profile flat
+       accel_profile flat
    }
 #
 # You can also configure each device individually.
 # Read `man 5 sway-input` for more information about this section.
 
-#User keybinds
+# User keybinds
 
-#Clipboard https://github.com/savedra1/clipse?tab=readme-ov-file
+# Clipboard https://github.com/savedra1/clipse?tab=readme-ov-file
 exec clipse -listen                                                                        # run the background listener on startup
 for_window [app_id="clipse"] floating enable, move position center, resize set 80ppt 80ppt # style window to look nice
 
-#keybinds function
+# keybinds function
 
 bindsym $mod+Escape exec bash -lc 'swaylock -f && sleep 0.3 && systemctl suspend'
-bindsym $mod+Shift+r exec $term -e bash -lc reboot 
+bindsym $mod+Shift+r exec $term -T "$popup_prefix-reboot" -e bash -lc reboot
 
-bindsym $mod+Shift+u exec $term -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
-    #always run rebuild after pixymon update
-bindsym $mod+Shift+f exec $term -e bash -lc 'flatpak update, read -n 1 -p "Press any key to close..."'
-bindsym $mod+Shift+p exec $term -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Shift+t exec $term -e bash -lc '~/.config/sway/settime.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+u exec $term -T "$popup_prefix-rebuild" -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
+    # always run rebuild after pixymon update
+bindsym $mod+Shift+f exec $term -T "$popup_prefix-flatpak" -e bash -lc 'flatpak update; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+p exec $term -T "$popup_prefix-pixy" -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+t exec $term -T "$popup_prefix-settime" -e bash -lc '~/.config/sway/settime.sh; echo; read -n 1 -p "Press any key to close..."'
 
-bindsym --no-repeat $mod+Print exec $term -a clipse -e clipse
-bindsym --no-repeat $mod+slash exec $term -e yazi
+bindsym --no-repeat $mod+Print    exec $term -a clipse -e clipse
+bindsym --no-repeat $mod+slash    exec $term -T "$popup_prefix-yazi" -e yazi
 bindsym --no-repeat $mod+BackSpace exec firefox
-bindsym --no-repeat $mod+Delete exec solaar
+bindsym --no-repeat $mod+Delete   exec solaar
 bindsym --no-repeat $mod+backslash exec VirtualBox
 
 bindsym --no-repeat Mod1+m exec prismlauncher
@@ -107,25 +118,25 @@ bindsym --no-repeat Mod5+m exec firefox --new-window 'https://m365.cloud.microso
 bindsym --no-repeat Mod5+c exec firefox --new-window 'https://m365.cloud.microsoft/chat/?refOrigin=Google&origindomain=Office&auth=2&client-request-id=061c8e37-e171-4c86-b85a-d2f733680eb8'
 bindsym --no-repeat mod5+p exec firefox --new-window 'http://localhost:631'
 
-bindsym --no-repeat Insert exec $term -e bash -lc 'timedatectl --property=TimeUSec show; echo; timedatectl --property=NTPSynchronized show; timedatectl --property=Timezone show; brightnessctl; echo; pactl get-sink-volume @DEFAULT_SINK@; pactl get-sink-mute @DEFAULT_SINK@; echo; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat $mod+Insert exec $term -e bash -lc 'fastfetch -l none; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat Insert       exec $term -T "$popup_prefix-info"      -e bash -lc 'timedatectl --property=TimeUSec show; echo; timedatectl --property=NTPSynchronized show; timedatectl --property=Timezone show; brightnessctl; echo; pactl get-sink-volume @DEFAULT_SINK@; pactl get-sink-mute @DEFAULT_SINK@; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+Insert  exec $term -T "$popup_prefix-fastfetch" -e bash -lc 'fastfetch -l none; echo; read -n 1 -p "Press any key to close..."'
 
-bindsym --no-repeat $mod+XF86Display exec $term -e bash -lc 'nmcli dev disconnect wlp0s20f0u4; echo; nmcli dev disconnect wlp0s20f0u1; echo; nmcli dev connect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat $mod+F2 exec $term -e bash -lc 'nmcli dev connect wlp0s20f0u4; echo; nmcli dev connect wlp0s20f0u1; echo; nmcli dev disconnect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat XF86Display exec $term -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat F2 exec $term -e bash -lc 'speedtest-cli; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+XF86Display exec $term -T "$popup_prefix-wifi-a"   -e bash -lc 'nmcli dev disconnect wlp0s20f0u4; echo; nmcli dev disconnect wlp0s20f0u1; echo; nmcli dev connect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+F2          exec $term -T "$popup_prefix-wifi-b"   -e bash -lc 'nmcli dev connect wlp0s20f0u4; echo; nmcli dev connect wlp0s20f0u1; echo; nmcli dev disconnect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat XF86Display      exec $term -T "$popup_prefix-wifi-list" -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat F2               exec $term -T "$popup_prefix-speedtest" -e bash -lc 'speedtest-cli; echo; read -n 1 -p "Press any key to close..."'
 
 bindsym --locked --no-repeat Mod5+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
 bindsym --locked --no-repeat Mod1+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -a -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
 bindsym --locked --no-repeat Control+Print exec bash -lc 'pkill -INT -f "wf-recorder"'
 
-bindsym --locked Print exec bash -lc 'mkdir -p ~/Pictures; ts=$(date +%Y%m%d-%H%M%S); grim -t png - | tee ~/Pictures/screenshot-$ts.png | wl-copy'
-bindsym --locked Shift+Print exec bash -lc 'mkdir -p ~/Pictures; ts=$(date +%Y%m%d-%H%M%S); grim -t png -g "$(slurp)" - | tee ~/Pictures/screenshot-$ts.png | wl-copy' 
+bindsym --locked Print       exec bash -lc 'mkdir -p ~/Pictures; ts=$(date +%Y%m%d-%H%M%S); grim -t png - | tee ~/Pictures/screenshot-$ts.png | wl-copy'
+bindsym --locked Shift+Print exec bash -lc 'mkdir -p ~/Pictures; ts=$(date +%Y%m%d-%H%M%S); grim -t png -g "$(slurp)" - | tee ~/Pictures/screenshot-$ts.png | wl-copy'
 
-bindsym --locked --no-repeat $mod+XF86AudioMute exec $term -e bash -lc 'pactl set-card-profile alsa_card.usb-Jieli_Technology_JLab_JBuds_Lux_USB_4250314331393108-00 output:iec958-stereo && pactl set-default-sink alsa_output.usb-Jieli_Technology_JLab_JBuds_Lux_USB_4250314331393108-00.iec958-stereo && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
-bindsym --locked --no-repeat $mod+XF86AudioMicMute exec $term -e bash -lc 'pactl set-default-sink alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
+bindsym --locked --no-repeat $mod+XF86AudioMute    exec $term -T "$popup_prefix-audio-usb" -e bash -lc 'pactl set-card-profile alsa_card.usb-Jieli_Technology_JLab_JBuds_Lux_USB_4250314331393108-00 output:iec958-stereo && pactl set-default-sink alsa_output.usb-Jieli_Technology_JLab_JBuds_Lux_USB_4250314331393108-00.iec958-stereo && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
+bindsym --locked --no-repeat $mod+XF86AudioMicMute exec $term -T "$popup_prefix-audio-int" -e bash -lc 'pactl set-default-sink alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
 
-#Other settings
+# Other settings
 default_border none
 output eDP-1 scale 0
 output eDP-1 allow_tearing yes
@@ -271,12 +282,12 @@ bindsym $mod+r mode "resize"
 #
 # Utilities:
 #
-    #Special keys to adjust volume via PulseAudio
+    # Special keys to adjust volume via PulseAudio
      bindsym --locked XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
      bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
      bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
      bindsym --locked XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
-    #Special keys to adjust brightness via brightnessctl
+    # Special keys to adjust brightness via brightnessctl
      bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
      bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
 
@@ -284,7 +295,7 @@ bindsym $mod+r mode "resize"
      bindsym --locked $mod+XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ 100%
      bindsym --locked $mod+XF86MonBrightnessDown exec brightnessctl set 5%
      bindsym --locked $mod+XF86MonBrightnessUp exec brightnessctl set 100%
-    #Special key to take a screenshot with grim
+    # Special key to take a screenshot with grim
     #bindsym Print exec grim
 
 #
