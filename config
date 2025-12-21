@@ -28,12 +28,10 @@ default_orientation auto
 # Any foot window whose title starts with "popup-" will float, center, and size.
 # You can change px to ppt if desired (see man 5 sway resize set).  [1](https://github.com/qtile/qtile/blob/master/docs/manual/config/keys.rst)
 set $popup_prefix popup
-set $popup_w 1000   # width in px
-set $popup_h 700    # height in px
 for_window [app_id="foot" title="^$popup_prefix-.*"] \
     floating enable, \
     move position center, \
-    resize set $popup_w px $popup_h px
+    resize set 1000 700
 
 ### Output configuration
 #
@@ -127,8 +125,8 @@ bindsym --no-repeat $mod+XF86Display exec $term -T "$popup_prefix-wifi-a"   -e b
 bindsym --no-repeat $mod+F2          exec $term -T "$popup_prefix-wifi-b"   -e bash -lc 'nmcli dev connect wlp0s20f0u4; echo; nmcli dev connect wlp0s20f0u1; echo; nmcli dev disconnect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
 bindsym --no-repeat XF86Display      exec $term -T "$popup_prefix-wifi-list" -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
 bindsym --no-repeat F2               exec $term -T "$popup_prefix-speedtest" -e bash -lc 'speedtest-cli; echo; read -n 1 -p "Press any key to close..."'
-bindsym Insert exec $term -T "qtile-float-fastfetch-main" -e bash -lc 'ff-main; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Insert exec $term -T "qtile-float-fastfetch-other" -e bash -lc 'ff-other; echo; read -n 1 -p "Press any key to close..."'
+bindsym Insert exec $term -T "$popup_prefix-fastfetch-main" -e bash -lc 'ff-main; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Insert exec $term -T "$popup_prefix-fastfetch-other" -e bash -lc 'ff-other; echo; read -n 1 -p "Press any key to close..."'
 
 bindsym --locked --no-repeat Mod5+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
 bindsym --locked --no-repeat Mod1+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -a -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
