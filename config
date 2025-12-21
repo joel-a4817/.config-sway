@@ -19,6 +19,11 @@ set $term foot
 # Your preferred application launcher
 set $menu wmenu-run
 
+# --- Autotiling (Option A) ---
+# Provides Qtile‑like consistent tiling by automatically choosing splitv/splith
+exec_always autotiling
+default_orientation auto
+
 # --- Popup terminals (float + center + size) ---
 # Any foot window whose title starts with "popup-" will float, center, and size.
 # You can change px to ppt if desired (see man 5 sway resize set).  [1](https://github.com/qtile/qtile/blob/master/docs/manual/config/keys.rst)
@@ -116,15 +121,14 @@ bindsym --no-repeat Mod5+w exec firefox --new-window 'https://web.whatsapp.com/'
 bindsym --no-repeat Mod5+d exec firefox --new-window 'https://drive.google.com/drive/my-drive'
 bindsym --no-repeat Mod5+m exec firefox --new-window 'https://m365.cloud.microsoft/apps/?refOrigin=Google&origindomain=Office&auth=2'
 bindsym --no-repeat Mod5+c exec firefox --new-window 'https://m365.cloud.microsoft/chat/?refOrigin=Google&origindomain=Office&auth=2&client-request-id=061c8e37-e171-4c86-b85a-d2f733680eb8'
-bindsym --no-repeat mod5+p exec firefox --new-window 'http://localhost:631'
-
-bindsym --no-repeat Insert       exec $term -T "$popup_prefix-info"      -e bash -lc 'timedatectl --property=TimeUSec show; echo; timedatectl --property=NTPSynchronized show; timedatectl --property=Timezone show; brightnessctl; echo; pactl get-sink-volume @DEFAULT_SINK@; pactl get-sink-mute @DEFAULT_SINK@; echo; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat $mod+Insert  exec $term -T "$popup_prefix-fastfetch" -e bash -lc 'fastfetch -l none; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat Mod5+p exec firefox --new-window 'http://localhost:631'
 
 bindsym --no-repeat $mod+XF86Display exec $term -T "$popup_prefix-wifi-a"   -e bash -lc 'nmcli dev disconnect wlp0s20f0u4; echo; nmcli dev disconnect wlp0s20f0u1; echo; nmcli dev connect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
 bindsym --no-repeat $mod+F2          exec $term -T "$popup_prefix-wifi-b"   -e bash -lc 'nmcli dev connect wlp0s20f0u4; echo; nmcli dev connect wlp0s20f0u1; echo; nmcli dev disconnect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
 bindsym --no-repeat XF86Display      exec $term -T "$popup_prefix-wifi-list" -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
 bindsym --no-repeat F2               exec $term -T "$popup_prefix-speedtest" -e bash -lc 'speedtest-cli; echo; read -n 1 -p "Press any key to close..."'
+bindsym Insert exec $term -T "qtile-float-fastfetch-main" -e bash -lc 'ff-main; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Insert exec $term -T "qtile-float-fastfetch-other" -e bash -lc 'ff-other; echo; read -n 1 -p "Press any key to close..."'
 
 bindsym --locked --no-repeat Mod5+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
 bindsym --locked --no-repeat Mod1+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -a -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
@@ -138,7 +142,7 @@ bindsym --locked --no-repeat $mod+XF86AudioMicMute exec $term -T "$popup_prefix-
 
 # Other settings
 default_border none
-output eDP-1 scale 0
+output eDP-1 scale 1
 output eDP-1 allow_tearing yes
 output * max_render_time off
 
@@ -313,7 +317,7 @@ bindsym $mod+r mode "resize"
 #        statusline #ffffff
 #        background #323232
 #        inactive_workspace #32323200 #32323200 #5c5c5c
-    }
-}
+#    }
+#}
 
 include /etc/sway/config.d/*
