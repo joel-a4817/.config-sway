@@ -74,7 +74,7 @@ bindsym $mod+Shift+u exec $term -T "$popup_prefix-rebuild" -e bash -lc 'nix flak
     # always run rebuild after pixymon update
 bindsym $mod+Shift+f exec $term -T "$popup_prefix-flatpak" -e bash -lc 'flatpak update; echo; read -n 1 -p "Press any key to close..."'
 bindsym $mod+Shift+p exec $term -T "$popup_prefix-pixy" -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Shift+t exec $term -T "$popup_prefix-settime" -e bash -lc '~/.config/sway/settime.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+t exec $term -T "$popup_prefix-settime" -e bash -lc '~/.config/sway/scripts/settime.sh; echo; read -n 1 -p "Press any key to close..."'
 
 bindsym --no-repeat $mod+Print    exec $term -T "$popup_prefix-clipse" -e clipse
 bindsym --no-repeat $mod+slash    exec $term -T "$popup_prefix-yazi" -e yazi
@@ -148,6 +148,7 @@ output * max_render_time off
     # Change normal to inverse to use left mouse button for resizing and right
     # mouse button for dragging.
     floating_modifier $mod normal
+    bindsym --no-repeat $mod+Grave exec ~/.config/sway/scripts/toggle-floating-mod.sh
 
     # Reload the configuration file
     bindsym $mod+Shift+c reload
