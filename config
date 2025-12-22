@@ -87,7 +87,7 @@ output * bg ~/.config/sway/mcqueen.jpeg fill
 
 # Clipboard https://github.com/savedra1/clipse?tab=readme-ov-file
 exec clipse -listen                                                                        # run the background listener on startup
-for_window [app_id="clipse"] floating enable, move position center, resize set 80ppt 80ppt # style window to look nice
+for_window [app_id="clipse"] floating enable, move position center, resize set 1000 700 # style window to look nice
 
 # keybinds function
 
