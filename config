@@ -25,14 +25,61 @@ seat * xcursor_theme Bibata-Modern-Classic 24
 exec_always autotiling
 default_orientation auto
 
-# --- Popup terminals (float + center + size) ---
-# Any foot window whose title starts with "popup-" will float, center, and size.
-# You can change px to ppt if desired (see man 5 sway resize set).  [1](https://github.com/qtile/qtile/blob/master/docs/manual/config/keys.rst)
-set $popup_prefix popup
-for_window [app_id="foot" title="^$popup_prefix-.*"] \
+# window opening rules
+set $popup popup
+
+for_window [app_id="foot" title="^$popup-update-*"] \
+    floating enable, \
+    move position center, \
+    resize set 1200 600 
+
+for_window [app_id="foot" title="^$popup-settime"] \
+    floating enable, \
+    move position center, \
+    resize set 500 100 
+
+#below includes regular foot terminal as well (clipse and yazi are others
+for_window [app_id="foot" title="^$popup-tuis"] \
     floating enable, \
     move position center, \
     resize set 1000 700
+
+for_window [app_id="foot" title="^$popup-f-aesthetics"] \
+    floating enable, \
+    move position center, \
+    resize set 750 450 
+
+for_window [app_id="foot" title="^$popup-f-system"] \
+    floating enable, \
+    move position center, \
+    resize set 800 600 
+
+for_window [app_id="foot" title="^$popup-f-devices"] \
+    floating enable, \
+    move position center, \
+    resize set 650 450 
+
+for_window [app_id="foot" title="^$popup-f-wifi"] \
+    floating enable, \
+    move position center, \
+    resize set 1000 450
+
+for_window [app_id="foot" title="^$popup-f-info"] \
+    floating enable, \
+    move position center, \
+    resize set 1200 750 
+
+for_window [app_id="foot" title="^$popup-f-main"] \
+    floating enable, \
+    move position center, \
+    resize set 1400 450 
+
+for_window [app_id="foot" title="^$popup-f-hardware"] \
+    floating enable, \
+    move position center, \
+    resize set 1000 650
+
+for_window [app_id ="PrismLauncher"] floating enable, move position center
 
 ### Output configuration
 output * bg ~/.config/sway/mcqueen.jpeg fill
@@ -66,25 +113,24 @@ output * bg ~/.config/sway/mcqueen.jpeg fill
 # Clipboard https://github.com/savedra1/clipse?tab=readme-ov-file
 exec clipse -listen
 exec_always ~/.config/sway/scripts/battery-popup.sh
-for_window [app_id ="PrismLauncher"] floating enable, move position center
 
 # keybinds function
 
 bindsym $mod+Escape exec bash -lc 'swaylock -fi /home/joel/.config/sway/mcqueen.jpeg && sleep 0.3 && systemctl suspend'
-bindsym $mod+Shift+r exec $term -T "$popup_prefix-reboot" -e bash -lc reboot
+bindsym $mod+Shift+r exec reboot
 
-bindsym $mod+Shift+u exec $term -T "$popup_prefix-rebuild" -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+u exec $term -T "$popup-update-rebuild" -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
     # always run rebuild after pixymon update
-bindsym $mod+Shift+f exec $term -T "$popup_prefix-flatpak" -e bash -lc 'flatpak update; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Shift+p exec $term -T "$popup_prefix-pixy" -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Shift+t exec $term -T "$popup_prefix-settime" -e bash -lc '~/.config/sway/scripts/settime.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+f exec $term -T "$popup-update-flatpak" -e bash -lc 'flatpak update; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+p exec $term -T "$popup-update-pixymon" -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Shift+t exec $term -T "$popup-settime" -e bash -lc '~/.config/sway/scripts/settime.sh; echo; read -n 1 -p "Press any key to close..."'
 
-bindsym --no-repeat $mod+Print    exec $term -T "$popup_prefix-clipse" -e clipse
-bindsym --no-repeat $mod+slash exec $term -e bash -lc yazi
+bindsym --no-repeat $mod+Print exec $term -T "$popup-tuis" -e clipse
+bindsym --no-repeat $mod+slash exec $term -T "$popup-tuis" -e yazi
 bindsym --no-repeat $mod+BackSpace exec firefox
 bindsym --no-repeat $mod+Delete   exec solaar
 bindsym --no-repeat $mod+backslash exec VirtualBox
-bindsym --no-repeat $mod+Shift+slash exec $term -e bash -lc 'sudo yazi'
+bindsym --no-repeat $mod+Shift+slash exec $term -T "$popup-tuis" -e 'sudo yazi'
 
 bindsym --no-repeat Mod1+m exec prismlauncher
 bindsym --no-repeat Mod1+g exec gitkraken
@@ -109,13 +155,13 @@ bindsym --no-repeat $mod+F2          exec $term -T "$popup_prefix-wifi-b"   -e b
 bindsym --no-repeat $mod+Insert      exec $term -T "$popup_prefix-wifi-list" -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
 
 #fastfetch
-bindsym $mod+Control+w exec $term -T "$popup_prefix-f-wifi" -e bash -lc '~/.config/sway/scripts/fastfetch/f-wifi.sh; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Control+m exec $term -T "$popup_prefix-f-main" -e bash -lc '~/.config/sway/scripts/fastfetch/f-main.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Control+i exec $term -T "$popup_prefix-f-info" -e bash -lc '~/.config/sway/scripts/fastfetch/f-info.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Control+s exec $term -T "$popup_prefix-f-system" -e bash -lc '~/.config/sway/scripts/fastfetch/f-system.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Control+d exec $term -T "$popup_prefix-f-devices" -e bash -lc '~/.config/sway/scripts/fastfetch/f-devices.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Control+h exec $term -T "$popup_prefix-f-hardware" -e bash -lc '~/.config/sway/scripts/fastfetch/f-hardware.sh; echo; read -n 1 -p "Press any key to close..."'
-bindsym $mod+Control+a exec $term -T "$popup_prefix-f-aesthetics" -e bash -lc '~/.config/sway/scripts/fastfetch/f-aesthetics.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+w exec $term -T "$popup-f-wifi" -e bash -lc '~/.config/sway/scripts/fastfetch/f-wifi.sh; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+m exec $term -T "$popup-f-main" -e bash -lc '~/.config/sway/scripts/fastfetch/f-main.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+i exec $term -T "$popup-f-info" -e bash -lc '~/.config/sway/scripts/fastfetch/f-info.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+s exec $term -T "$popup-f-system" -e bash -lc '~/.config/sway/scripts/fastfetch/f-system.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+d exec $term -T "$popup-f-devices" -e bash -lc '~/.config/sway/scripts/fastfetch/f-devices.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+h exec $term -T "$popup-f-hardware" -e bash -lc '~/.config/sway/scripts/fastfetch/f-hardware.sh; echo; read -n 1 -p "Press any key to close..."'
+bindsym $mod+Control+a exec $term -T "$popup-f-aesthetics" -e bash -lc '~/.config/sway/scripts/fastfetch/f-aesthetics.sh; echo; read -n 1 -p "Press any key to close..."'
 
 bindsym --locked --no-repeat Mod5+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
 bindsym --locked --no-repeat Mod1+Print exec bash -lc 'mkdir -p ~/Videos && wf-recorder -a -f ~/Videos/recording-$(date +%Y%m%d-%H%M%S).mp4'
@@ -138,7 +184,7 @@ output * max_render_time off
 # Basics:
 #
 # Start a terminal
-    bindsym $mod+Return exec $term
+    bindsym $mod+Return exec $term -T "$popup-tuis"
 
     # Kill focused window
     bindsym $mod+q kill
