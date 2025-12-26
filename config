@@ -121,7 +121,6 @@ bindsym $mod+Shift+r exec reboot
 
 bindsym $mod+Shift+u exec $term -T "$popup-update-rebuild" -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
     # always run rebuild after pixymon update
-bindsym $mod+Shift+f exec $term -T "$popup-update-flatpak" -e bash -lc 'flatpak update; echo; read -n 1 -p "Press any key to close..."'
 bindsym $mod+Shift+p exec $term -T "$popup-update-pixymon" -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
 bindsym $mod+Shift+t exec $term -T "$popup-settime" -e bash -lc '~/.config/sway/scripts/settime.sh; echo; read -n 1 -p "Press any key to close..."'
 
@@ -137,7 +136,7 @@ bindsym --no-repeat Mod1+g exec gitkraken
 bindsym --no-repeat Mod1+k exec kicad
 bindsym --no-repeat Mod1+p exec prusa-slicer
 bindsym --no-repeat Mod1+b exec bambu-studio
-bindsym --no-repeat Mod1+n exec flatpak run io.atom.electron.NotesHub
+bindsym --no-repeat Mod1+n exec $term -e bash -lc "appimage-run /home/joel/NotesHub-3.9.0-x64.AppImage"
 
 bindsym --no-repeat Mod5+a exec VBoxManage startvm "w11" --type gui
 bindsym --no-repeat Mod5+l exec $term -T "$popup_prefix-mc1" -e bash -lc 'prismlauncher --launch "1.21.9(1)"'
