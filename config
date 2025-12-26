@@ -79,6 +79,16 @@ for_window [app_id="foot" title="^$popup-f-hardware"] \
     move position center, \
     resize set 1000 650
 
+for_window [app_id="foot" title="^$popup-wifi-select"] \
+    floating enable, \
+    move position center, \
+    resize set 1200 1000
+
+for_window [app_id="foot" title="^$popup-wifi-device-select*"] \
+    floating enable, \
+    move position center, \
+    resize set 500 500
+
 for_window [app_id ="PrismLauncher"] floating enable, move position center
 
 ### Output configuration
@@ -139,9 +149,9 @@ bindsym --no-repeat Mod1+b exec bambu-studio
 bindsym --no-repeat Mod1+n exec $term -e bash -lc "appimage-run /home/joel/NotesHub-3.9.0-x64.AppImage"
 
 bindsym --no-repeat Mod5+a exec VBoxManage startvm "w11" --type gui
-bindsym --no-repeat Mod5+l exec $term -T "$popup_prefix-mc1" -e bash -lc 'prismlauncher --launch "1.21.9(1)"'
-bindsym --no-repeat Mod5+h exec $term -T "$popup_prefix-mc2" -e bash -lc 'prismlauncher --launch "1.21.4"'
-bindsym --no-repeat Mod5+b exec $term -T "$popup_prefix-mc3" -e bash -lc 'prismlauncher --launch "Enhanced Bedwars 1.8.9"'
+bindsym --no-repeat Mod5+l exec $term -e bash -lc 'prismlauncher --launch "1.21.9(1)"'
+bindsym --no-repeat Mod5+h exec $term -T -e bash -lc 'prismlauncher --launch "1.21.4"'
+bindsym --no-repeat Mod5+b exec $term -e bash -lc 'prismlauncher --launch "Enhanced Bedwars 1.8.9"'
 bindsym --no-repeat Mod5+g exec firefox --new-window 'https://github.com/repos?q=owner%3A%40me'
 bindsym --no-repeat Mod5+w exec firefox --new-window 'https://web.whatsapp.com/'
 bindsym --no-repeat Mod5+d exec firefox --new-window 'https://drive.google.com/drive/my-drive'
@@ -149,9 +159,9 @@ bindsym --no-repeat Mod5+m exec firefox --new-window 'https://m365.cloud.microso
 bindsym --no-repeat Mod5+c exec firefox --new-window 'https://m365.cloud.microsoft/chat/?refOrigin=Google&origindomain=Office&auth=2&client-request-id=061c8e37-e171-4c86-b85a-d2f733680eb8'
 bindsym --no-repeat Mod5+p exec firefox --new-window 'http://localhost:631'
 
-bindsym --no-repeat $mod+XF86Display exec $term -T "$popup_prefix-wifi-a"   -e bash -lc 'nmcli dev disconnect wlp0s20f0u4; echo; nmcli dev disconnect wlp0s20f0u1; echo; nmcli dev connect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat $mod+F2          exec $term -T "$popup_prefix-wifi-b"   -e bash -lc 'nmcli dev connect wlp0s20f0u4; echo; nmcli dev connect wlp0s20f0u1; echo; nmcli dev disconnect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
-bindsym --no-repeat $mod+Insert      exec $term -T "$popup_prefix-wifi-list" -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+XF86Display exec $term -T "$popup-wifi-device-select1"   -e bash -lc 'nmcli dev disconnect wlp0s20f0u4; echo; nmcli dev disconnect wlp0s20f0u1; echo; nmcli dev connect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+F2          exec $term -T "$popup-wifi-device-select2"   -e bash -lc 'nmcli dev connect wlp0s20f0u4; echo; nmcli dev connect wlp0s20f0u1; echo; nmcli dev disconnect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+Insert      exec $term -T "$popup-wifi-select" -e bash -lc 'nmcli device status; echo; nmcli device wifi list; echo; nmcli dev wifi connect --ask; read -n 1 -p "Press any key to close..."'
 
 #fastfetch
 bindsym $mod+Control+w exec $term -T "$popup-f-wifi" -e bash -lc '~/.config/sway/scripts/fastfetch/f-wifi.sh; read -n 1 -p "Press any key to close..."'
