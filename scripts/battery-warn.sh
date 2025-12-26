@@ -5,12 +5,16 @@
 
 set -euo pipefail
 
-BAT_PATH="/sys/class/power_supply/BAT0"  # change to BAT1 if your machine uses that
-INTERVAL_SEC=300                         # 5 minutes
-LOWEST_TRIGGER=25                        # start issuing warnings at 25%, then 24, 23, ...
-SWAYNAG="/usr/bin/swaynag"               # set to absolute path if needed (use: which swaynag)
+BAT_PATH="/sys/class/power_supply/BAT0"   # change to BAT1 if your machine uses that
+INTERVAL_SEC=300                          # 5 minutes
+LOWEST_TRIGGER=25                         # start issuing warnings at 25%, then 24, 23, ...
+SWAYNAG="/run/current-system/sw/bin/swaynag"   # NixOS path; use `which swaynag` to verify
 LOG="${HOME}/.local/state/battery-interval-swaynag.log"
 mkdir -p "$(dirname "$LOG")"
+
+# If you want the "Open Terminal" button to run inside foot:
+export TERMINAL=foot  # swaynag runs -b/-z actions inside this terminal if set.  (See swaynag(1))
+# If you don't want a terminal button, you can unset this.
 
 # Track which percentages have been notified during the current discharge session.
 declare -A notified=()
@@ -29,6 +33,11 @@ while true; do
   status=$(<"$BAT_PATH/status")
   cap=${cap//[[:space:]]/}
 
+  # ---- TEST MODE (uncomment for a quick test) ----
+  # cap=15
+  # status="Discharging"
+  # -----------------------------------------------
+
   # Reset cache when charging/full
   if [[ "$status" != "Discharging" ]]; then
     notified=()
@@ -43,15 +52,14 @@ while true; do
       msg="Battery is at ${cap}%. Plug in now!"
 
       # Show swaynag over fullscreen using the overlay layer
+      # NOTE:
+      # - Use -s "OK" for a dismiss button with NO action.
+      # - If you want a terminal button, add -b "Open Terminal" '<command>'
       "$SWAYNAG" --layer overlay \
         -t warning \
         -m "$msg" \
-        -B "OK" || true
-      # Notes:
-      # - --layer overlay ensures it appears above fullscreen (Layer Shell). 
-      # - -t warning applies the 'warning' type styling; -B adds an OK button.
-      #   See swaynag(1) and swaynag(5) for options.
-
+        -s "OK" \
+        
       notified[$cap]=1
       echo "$(date -Iseconds) [WARN] ${msg} (triggered)" >> "$LOG"
     else
