@@ -66,12 +66,12 @@ for_window [app_id="foot" title="^$popup-f-wifi"] \
 for_window [app_id="foot" title="^$popup-f-info"] \
     floating enable, \
     move position center, \
-    resize set 1200 750 
+    resize set 1200 800 
 
 for_window [app_id="foot" title="^$popup-f-main"] \
     floating enable, \
     move position center, \
-    resize set 1400 450 
+    resize set 1400 400 
 
 for_window [app_id="foot" title="^$popup-f-hardware"] \
     floating enable, \

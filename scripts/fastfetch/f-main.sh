@@ -26,7 +26,6 @@ cat >"$cfg" <<'JSON'
     { "type": "media",     "key": "media",     "keyColor": "light_magenta" },
     { "type": "player",    "key": "player",    "keyColor": "light_magenta" },
     { "type": "sound",     "key": "sound",     "keyColor": "light_magenta" },
-    { "type": "users",     "key": "users",     "keyColor": "light_cyan" },
 
     "break",
     { "type": "colors", }

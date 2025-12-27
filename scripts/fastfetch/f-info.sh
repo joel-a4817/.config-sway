@@ -37,6 +37,7 @@ cat >"$cfg" <<'JSON'
     { "type": "diskIo",   "key": "diskIo",   "keyColor": "light_magenta" },
 
     "break",
+    { "type": "users",     "key": "users",     "keyColor": "light_cyan" },
     { "type": "uptime",   "key": "uptime",   "keyColor": "light_cyan" },
 
     "break",
