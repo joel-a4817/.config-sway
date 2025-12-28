@@ -217,9 +217,9 @@ output * max_render_time off
     bindsym $mod+Shift+c exec bash -lc "rm -Rf ~/.local/state/battery-watcher.lock ~/.local/state/battery-interval-swaynag.log && swaymsg reload"
 
     # system off options
-    bindsym --no-repeat --locked $mod+Shift+e exec bash -lc swaynag -y overlay -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway?' -B 'Yes, exit sway' 'rm -Rf ~/.local/state/battery-watcher.lock ~/.local/state/battery-interval-swaynag.log && swaymsg exit'
+    bindsym --no-repeat --locked $mod+Shift+e exec bash -lc "swaynag -y overlay -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway?' -B 'Yes, exit sway' 'rm -Rf ~/.local/state/battery-watcher.lock ~/.local/state/battery-interval-swaynag.log && swaymsg exit'"
 bindsym --locked $mod+Escape exec bash -lc 'rm -Rf ~/.local/state/battery-watcher.lock ~/.local/state/battery-interval-swaynag.log && swaylock -fi /home/joel/.config/sway/mcqueen.jpeg && sleep 0.3 && systemctl suspend'
-bindsym --no-repeat --locked $mod+Shift+r exec bash -lc swaynag -y overlay -t warning -m 'You pressed the reboot shortcut. Do you really want to reboot your device?' -B 'Yes, reboot my device' 'rm -Rf ~/.local/state/battery-watcher.lock ~/.local/state/battery-interval-swaynag.log && reboot'
+bindsym --no-repeat --locked $mod+Shift+r exec bash -lc "swaynag -y overlay -t warning -m 'You pressed the reboot shortcut. Do you really want to reboot your device?' -B 'Yes, reboot my device' 'rm -Rf ~/.local/state/battery-watcher.lock ~/.local/state/battery-interval-swaynag.log && reboot'"
 
 #
 # Moving around:
