@@ -141,24 +141,24 @@ bindsym --no-repeat $mod+BackSpace exec firefox
 bindsym --no-repeat $mod+Delete   exec solaar
 bindsym --no-repeat $mod+backslash exec VirtualBox
 
-bindsym --no-repeat Mod1+s exec signal-desktop
-bindsym --no-repeat Mod1+m exec prismlauncher
-bindsym --no-repeat Mod1+g exec gitkraken
-bindsym --no-repeat Mod1+k exec kicad
-bindsym --no-repeat Mod1+p exec prusa-slicer
-bindsym --no-repeat Mod1+b exec bambu-studio
-bindsym --no-repeat Mod1+n exec bash -lc "appimage-run /home/joel/Downloads/Apps/NotesHub-3.9.0-x64.AppImage"
+bindsym --no-repeat $mod+Mod1+s exec signal-desktop
+bindsym --no-repeat $mod+Mod1+m exec prismlauncher
+bindsym --no-repeat $mod+Mod1+g exec gitkraken
+bindsym --no-repeat $mod+Mod1+k exec kicad
+bindsym --no-repeat $mod+Mod1+p exec prusa-slicer
+bindsym --no-repeat $mod+Mod1+b exec bambu-studio
+bindsym --no-repeat $mod+Mod1+n exec bash -lc "appimage-run /home/joel/Downloads/Apps/NotesHub-3.9.0-x64.AppImage"
 
-bindsym --no-repeat Mod5+a exec VBoxManage startvm "w11" --type gui
-bindsym --no-repeat Mod5+l exec $term -e bash -lc 'prismlauncher --launch "1.21.9(1)"'
-bindsym --no-repeat Mod5+h exec $term -T -e bash -lc 'prismlauncher --launch "1.21.4"'
-bindsym --no-repeat Mod5+b exec $term -e bash -lc 'prismlauncher --launch "Enhanced Bedwars 1.8.9"'
-bindsym --no-repeat Mod5+g exec firefox --new-window 'https://github.com/repos?q=owner%3A%40me'
-bindsym --no-repeat Mod5+w exec firefox --new-window 'https://web.whatsapp.com/'
-bindsym --no-repeat Mod5+d exec firefox --new-window 'https://drive.google.com/drive/my-drive'
-bindsym --no-repeat Mod5+m exec firefox --new-window 'https://m365.cloud.microsoft/apps/?refOrigin=Google&origindomain=Office&auth=2'
-bindsym --no-repeat Mod5+c exec firefox --new-window 'https://m365.cloud.microsoft/chat/?refOrigin=Google&origindomain=Office&auth=2&client-request-id=061c8e37-e171-4c86-b85a-d2f733680eb8'
-bindsym --no-repeat Mod5+p exec firefox --new-window 'http://localhost:631'
+bindsym --no-repeat $mod+Mod5+a exec VBoxManage startvm "w11" --type gui
+bindsym --no-repeat $mod+Mod5+l exec $term -e bash -lc 'prismlauncher --launch "1.21.9(1)"'
+bindsym --no-repeat $mod+Mod5+h exec $term -T -e bash -lc 'prismlauncher --launch "1.21.4"'
+bindsym --no-repeat $mod+Mod5+b exec $term -e bash -lc 'prismlauncher --launch "Enhanced Bedwars 1.8.9"'
+bindsym --no-repeat $mod+Mod5+g exec firefox --new-window 'https://github.com/repos?q=owner%3A%40me'
+bindsym --no-repeat $mod+Mod5+w exec firefox --new-window 'https://web.whatsapp.com/'
+bindsym --no-repeat $mod+Mod5+d exec firefox --new-window 'https://drive.google.com/drive/my-drive'
+bindsym --no-repeat $mod+Mod5+m exec firefox --new-window 'https://m365.cloud.microsoft/apps/?refOrigin=Google&origindomain=Office&auth=2'
+bindsym --no-repeat $mod+Mod5+c exec firefox --new-window 'https://m365.cloud.microsoft/chat/?refOrigin=Google&origindomain=Office&auth=2&client-request-id=061c8e37-e171-4c86-b85a-d2f733680eb8'
+bindsym --no-repeat $mod+Mod5+p exec firefox --new-window 'http://localhost:631'
 
 #wifi
 bindsym --no-repeat $mod+XF86Display exec $term -T "$popup-wifi-device-select1"   -e bash -lc 'nmcli dev disconnect wlp0s20f0u4; echo; nmcli dev disconnect wlp0s20f0u1; echo; nmcli dev connect wlp0s20f3; echo; read -n 1 -p "Press any key to close..."'
