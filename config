@@ -71,7 +71,7 @@ for_window [app_id="foot" title="^$popup-f-info"] \
 for_window [app_id="foot" title="^$popup-f-main"] \
     floating enable, \
     move position center, \
-    resize set 1450 400 
+    resize set 1800 400 
 
 for_window [app_id="foot" title="^$popup-f-hardware"] \
     floating enable, \
@@ -94,6 +94,8 @@ for_window [app_id="foot" title="^$popup-audio-select*"] \
     resize set 1200 100
 
 for_window [app_id ="PrismLauncher"] floating enable, move position center
+# NotesHub glitch-fix:
+for_window [app_id="NotesHub"] floating enable, floating disable
 
 ### Output configuration
 output * bg ~/.config/sway/mcqueen.jpeg fill
