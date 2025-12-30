@@ -2,44 +2,65 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Grab exactly ONE focused container from the tree
-focused="$(swaymsg -r -t get_tree | jq -rc '
-  [recurse(.nodes[]?, .floating_nodes[]?) | select(.focused == true)]
-  | first // empty
-')"
+swaymsg -t subscribe -m '["window"]' \
+| stdbuf -oL jq -c '
+    select(.change=="fullscreen_mode")
+    | {
+        app_id: .container.app_id,
+        pid: .container.pid,
+        con_id: .container.id,
+        fs: .container.fullscreen_mode,
+        floating: (.container.floating // ""),
+        w: (.container.rect.width // 0),
+        h: (.container.rect.height // 0)
+      }
+  ' \
+| while read -r ev; do
+    app_id="$(jq -r '.app_id // ""' <<<"$ev")"
+    pid="$(jq -r '.pid // empty' <<<"$ev")"
+    con_id="$(jq -r '.con_id // empty' <<<"$ev")"
+    fs="$(jq -r '.fs // 0' <<<"$ev")"
+    floating="$(jq -r '.floating // ""' <<<"$ev")"
+    w="$(jq -r '.w // 0' <<<"$ev")"
+    h="$(jq -r '.h // 0' <<<"$ev")"
 
-# If we couldn't find anything focused, just toggle fullscreen
-if [[ -z "${focused}" ]]; then
-  swaymsg fullscreen toggle >/dev/null
-  exit 0
-fi
+    case "$app_id" in
+      foot|footclient)
+        [[ "$pid" =~ ^[0-9]+$ ]] || continue
+        [[ "$con_id" =~ ^[0-9]+$ ]] || continue
 
-pid="$(jq -r '.pid // empty' <<<"${focused}")"
-app_id="$(jq -r '.app_id // empty' <<<"${focused}")"
-fs="$(jq -r '.fullscreen_mode // 0' <<<"${focused}")"
+        if [[ "$fs" != "0" ]]; then
+          # Enter fullscreen -> Theme 2
+          kill -USR2 "$pid" 2>/dev/null || true
+          continue
+        fi
 
-# If PID is missing, fallback
-if [[ -z "${pid}" ]]; then
-  swaymsg fullscreen toggle >/dev/null
-  exit 0
-fi
+        # Exit fullscreen -> Theme 1
+        # Workaround: if it’s tiled and already output-sized, force a reconfigure:
+        # float enable then float disable on that container.
+        # This nudges sway/wayland into rebuilding the surface state.
+        #
+        # Determine if we're in tiling (floating ends with "_off" typically)
+        is_tiled=0
+        [[ "$floating" == *"_off" || "$floating" == "false" || -z "$floating" ]] && is_tiled=1
 
-# Only apply to foot (normal mode) or footclient (server mode)
-# foot defaults its app-id to "foot" in normal mode. [3](https://manpages.debian.org/trixie/waybar/waybar-sway-window.5.en.html)
-if [[ "${app_id}" != "foot" && "${app_id}" != "footclient" ]]; then
-  swaymsg fullscreen toggle >/dev/null
-  exit 0
-fi
+        if [[ "$is_tiled" -eq 1 ]]; then
+          # Get focused output size (so we only do this hack when the view is basically full-screen already)
+          # swaymsg supports get_outputs, returning JSON for outputs. [6](https://manpages.debian.org/trixie/sway/swaymsg.1.en.html)
+          out_w="$(swaymsg -t get_outputs | jq -r '.[] | select(.focused==true) | .rect.width')"
+          out_h="$(swaymsg -t get_outputs | jq -r '.[] | select(.focused==true) | .rect.height')"
 
-# Theme switch (signal) + fullscreen toggle
-# Foot signals: SIGUSR1 -> [colors], SIGUSR2 -> [colors2]. [1](https://www.reddit.com/r/swaywm/comments/s80101/how_do_you_avoid_opening_windows_in_fullscreen/)
-if [[ "${fs}" == "0" ]]; then
-  # Going fullscreen: switch to opaque theme first (colors2), then fullscreen
-  kill -USR2 "${pid}" 2>/dev/null || true
-  swaymsg fullscreen enable >/dev/null
-else
-  # Leaving fullscreen: switch back to transparent theme first (colors), then unfullscreen
-  kill -USR1 "${pid}" 2>/dev/null || true
-  swaymsg fullscreen disable >/dev/null
-fi
+          # “close enough” threshold: allow small diffs due to gaps/borders
+          # If the view is already essentially output-sized, do the float/unfloat kick.
+          if [[ "$w" -ge $((out_w - 10)) && "$h" -ge $((out_h - 10)) ]]; then
+            # Apply to this exact container using con_id (NOT pid). [4](https://github.com/swaywm/sway/issues/4972)[5](https://unix.stackexchange.com/questions/773681/swaymsg-not-focusing-window)
+            # floating enable/disable are valid sway commands. [3](https://manpath.be/f29/5/sway)
+            swaymsg -q -- "[con_id=${con_id}] floating enable, floating disable" || true
+          fi
+        fi
+
+        kill -USR1 "$pid" 2>/dev/null || true
+      ;;
+    esac
+  done
 

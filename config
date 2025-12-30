@@ -21,7 +21,7 @@ set $menu wmenu-run
 seat * xcursor_theme Bibata-Modern-Amber 32
 
 # window opening rules
-
+exec ~/.config/sway/scripts/foot-fullscreen-toggle.sh
 exec autotiling
 default_orientation auto
 
@@ -71,7 +71,7 @@ for_window [app_id="foot" title="^$popup-f-info"] \
 for_window [app_id="foot" title="^$popup-f-main"] \
     floating enable, \
     move position center, \
-    resize set 1400 400 
+    resize set 1450 400 
 
 for_window [app_id="foot" title="^$popup-f-hardware"] \
     floating enable, \
@@ -129,7 +129,7 @@ exec clipse -listen
 exec ~/.config/sway/scripts/battery-warn.sh
 
 # keybinds update
-bindsym --no-repeat $mod+Shift+u exec $term -T "$popup-update-rebuild" -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
+bindsym --no-repeat $mod+Shift+u exec $term -T "$popup-update-rebuild" -e bash -lc 'nix flake update --flake ~/nixos && sudo nixos-rebuild switch --upgrade --flake ~/nixos#rt4817; echo; read -n 1 -p "Press any key to close..."'
     # always run rebuild after pixymon update
 bindsym --no-repeat $mod+Shift+p exec $term -T "$popup-update-pixymon" -e bash -lc 'cd ~/pixy2 && git pull --ff-only && cd scripts && ./build_pixymon_src.sh; echo; read -n 1 -p "Press any key to close..."'
 bindsym --no-repeat $mod+Shift+t exec $term -T "$popup-settime" -e bash -lc '~/.config/sway/scripts/settime.sh; echo; read -n 1 -p "Press any key to close..."'
@@ -290,10 +290,10 @@ bindsym --no-repeat --locked $mod+Shift+r exec bash -lc "swaynag -c ~/.config/sw
     bindsym $mod+e layout toggle split
 
     # Make the current focus fullscreen
-    bindsym $mod+f exec ~/.config/sway/scripts/foot-fullscreen-toggle.sh
+    bindsym $mod+f fullscreen toggle  
 
     # Toggle the current focus between tiling and floating mode
-    bindsym --no-repeat $mod+Shift+space floating toggle
+    bindsym --no-repeat $mod+Shift+space exec ~/.config/sway/scripts/toggle_float_remember.sh
 
     # Swap focus between the tiling area and the floating area
     bindsym $mod+space focus mode_toggle
