@@ -21,7 +21,7 @@ LOG="${STATE_DIR}/battery-interval-swaynag.log"
 LOCKFILE="${STATE_DIR}/battery-watcher.lock"
 mkdir -p "${STATE_DIR}"
 
-# ---- single-instance lock (safe with exec_always) ----
+# ---- single-instance lock ----
 exec 9>"$LOCKFILE"
 if ! flock -n 9; then
   echo "$(date -Iseconds) [INFO] another instance is running; exiting" >> "$LOG"
