@@ -24,7 +24,6 @@ seat * xcursor_theme Bibata-Modern-Amber 32
 ## execs 
 # Clipboard https://github.com/savedra1/clipse?tab=readme-ov-file
 exec clipse -listen
-exec ~/.config/sway/scripts/foot-fullscreen-toggle.sh
 exec ~/.config/sway/scripts/battery-warn.sh
 exec autotiling
 default_orientation auto
