@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
   "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ OS & Session ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ OS & Session ┈" },
 
     "break",
     { "type": "os",         "key": "os",         "keyColor": "light_blue" },

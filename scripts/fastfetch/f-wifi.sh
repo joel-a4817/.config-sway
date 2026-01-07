@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
   "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ Network & Reachability ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ Network & Reachability ┈" },
 
     "break",
     { "type": "wifi",    "key": "wifi",    "keyColor": "light_cyan" },

@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
    "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ Input & Wireless ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ Input & Wireless ┈" },
 
     "break",
     { "type": "bluetooth",    "key": "bluetooth",    "keyColor": "light_green" },

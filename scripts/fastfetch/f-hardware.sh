@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
   "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ Physical & Graphics ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ Physical & Graphics ┈" },
 
     "break",
     { "type": "board",     "key": "board",     "keyColor": "light_blue" },

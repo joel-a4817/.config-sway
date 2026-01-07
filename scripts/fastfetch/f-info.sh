@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
   "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ Live System Stats ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ Live System Stats ┈" },
 
     "break",
     { "type": "cpu",      "key": "cpu",      "keyColor": "light_green",

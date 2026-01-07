@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
   "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ Session Snapshot ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ Session Snapshot ┈" },
 
     "break",
     { "type": "datetime",  "key": "datetime",  "keyColor": "light_cyan",  "format": "{1}-{3}-{11} {14}:{17}:{20}" },

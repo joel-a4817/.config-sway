@@ -17,7 +17,7 @@ cat >"$cfg" <<'JSON'
   "modules": [
     { "type": "title" },
     "break",
-    { "type": "custom", "format": "\u001b[90m┈ Desktop Visuals ┈" },
+    { "type": "custom", "format": "\u001b[38;5;208m┈ Desktop Visuals ┈" },
 
     "break",
     { "type": "de",           "key": "de",           "keyColor": "light_blue" },
