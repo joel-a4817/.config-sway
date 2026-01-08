@@ -29,6 +29,7 @@ exec autotiling
 default_orientation auto
 exec ~/.config/sway/scripts/float-geometry-watcher.sh
 exec swaylock -F -fi /home/joel/Documents/Backup/mcqueen.jpeg
+exec ~/.config/sway/scripts/borders-follow-state.sh
 
 set $popup popup
 
@@ -155,8 +156,21 @@ bindsym --locked --no-repeat $mod+XF86AudioMute fullscreen disable; exec $term -
 bindsym --locked --no-repeat $mod+XF86AudioMicMute fullscreen disable; exec $term -T "$popup-audio-select2" -e bash -c 'pactl set-default-sink alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
 
 # Other settings
-client.focused  #ff8800  #222222  #ffffff  #ff8800  #ff8800
-default_border pixel
+output eDP-1 allow_tearing yes
+output * max_render_time off
+
+# Border colours
+set $fg        #E6E1E8
+set $bg90      #1D1C22E6
+set $accent    #ff8800
+
+client.focused          $accent $bg90 $fg $accent $accent
+client.focused_inactive $bg90   $bg90 $fg $bg90   $bg90
+client.unfocused        $bg90   $bg90 $fg $bg90   $bg90
+client.urgent           #BF616A #BF616A $fg #BF616A #BF616A
+client.background       #1D1C22
+
+# Output tweaks
 output eDP-1 allow_tearing yes
 output * max_render_time off
 
