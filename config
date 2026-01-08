@@ -56,10 +56,6 @@ for_window [app_id="librewolf"] opacity 0.9
 for_window [class="NotesHub"] opacity 0.9
 for_window [app_id="signal"] opacity 0.9
 
-### Output configuration
-output * bg /home/joel/Documents/Backup/mcqueen-blurred.jpeg fill
-# Example configuration:
-#   output HDMI-A-1 resolution 1920x1080 position 1920,0
 
 ### Input configuration
    input type:touchpad {
@@ -87,9 +83,7 @@ output * bg /home/joel/Documents/Backup/mcqueen-blurred.jpeg fill
     drag_lock enabled
     map_to_output eDP-1
   }
-#
-# You can also configure each device individually.
-# Read `man 5 sway-input` for more information about this section.
+
 
 # User keybinds
 
@@ -155,6 +149,9 @@ bindsym --locked --no-repeat Shift+Print exec bash -c 'mkdir -p ~/Downloads/Pict
 bindsym --locked --no-repeat $mod+XF86AudioMute fullscreen disable; exec $term -T "$popup-audio-select1" -e bash -c 'pactl set-card-profile alsa_card.usb-Jieli_Technology_JLab_JBuds_Lux_USB_4250314331393108-00 output:iec958-stereo && pactl set-default-sink alsa_output.usb-Jieli_Technology_JLab_JBuds_Lux_USB_4250314331393108-00.iec958-stereo && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
 bindsym --locked --no-repeat $mod+XF86AudioMicMute fullscreen disable; exec $term -T "$popup-audio-select2" -e bash -c 'pactl set-default-sink alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink && pactl get-default-sink; read -n 1 -p "Press any key to close..."'
 
+#bg
+output * bg /home/joel/Documents/Backup/mcqueen-blurred.jpeg fill
+
 # Other settings
 output eDP-1 allow_tearing yes
 output * max_render_time off
@@ -170,10 +167,6 @@ client.unfocused        $bg90   $bg90 $fg $bg90   $bg90
 client.urgent           #BF616A #BF616A $fg #BF616A #BF616A
 client.background       #1D1C22
 
-# Output tweaks
-output eDP-1 allow_tearing yes
-output * max_render_time off
-
 ### Key bindings
 #
 # Basics:
@@ -187,10 +180,6 @@ output * max_render_time off
     # Start your launcher
     bindsym --no-repeat $mod+d exec $menu
 
-    # Drag floating windows by holding down $mod and left mouse button.
-    # Resize them with right mouse button + $mod.
-    # Despite the name, also works for non-floating windows.
-    # Change normal to inverse to use left mouse button for resizing and right
     # mouse button for dragging.
     floating_modifier $mod normal
     bindsym --no-repeat $mod+Grave exec ~/.config/sway/scripts/toggle-floating-mod.sh
@@ -257,7 +246,6 @@ bindsym --no-repeat --locked $mod+Shift+r exec bash -c "swaynag -t warning -y ov
 #
 # Layout stuff:
 #
-    # You can "split" the current object of your focus with
     # $mod+b or $mod+v, for horizontal and vertical splits
     # respectively.
     bindsym $mod+b splith
@@ -281,8 +269,6 @@ bindsym --no-repeat --locked $mod+Shift+r exec bash -c "swaynag -t warning -y ov
 #
 # Scratchpad:
 #
-    # Sway has a "scratchpad", which is a bag of holding for windows.
-    # You can send windows there and get them back later.
 
     # Move the currently focused window to the scratchpad
     bindsym --no-repeat $mod+Shift+minus move scratchpad
@@ -294,10 +280,6 @@ bindsym --no-repeat --locked $mod+Shift+r exec bash -c "swaynag -t warning -y ov
 # Resizing containers:
 #
 mode "resize" {
-    # left will shrink the containers width
-    # right will grow the containers width
-    # up will shrink the containers height
-    # down will grow the containers height
     bindsym $left resize shrink width 12px
     bindsym $down resize grow height 12px
     bindsym $up resize shrink height 12px
