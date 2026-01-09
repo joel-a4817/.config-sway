@@ -36,7 +36,7 @@ set $popup popup
 # Specific popups (self-contained: floating + resize + center)
 
 for_window [app_id="foot" title="^$popup-update"]         floating enable, resize set 1200 600, move position center
-for_window [app_id="foot" title="^$popup-settime$"]       floating enable, resize set 500 100,  move position center
+for_window [app_id="foot" title="^$popup-settime$"]       floating enable, resize set 500 150,  move position center
 for_window [app_id="foot" title="^$popup-tuis"]           floating enable, resize set 1000 700, move position center
 
 for_window [app_id="foot" title="^$popup-f-aesthetics"]   floating enable, resize set 800 450,  move position center
