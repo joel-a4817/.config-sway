@@ -66,6 +66,7 @@ for_window [class="coda-qt"] opacity 0.85
 for_window [title="^Collabora Office"] opacity 0.85
 for_window [title="Collabora Office*"] opacity 0.85
 for_window [app_id="discord"] opacity 0.85
+for_window [app_id="Antra"] opacity 0.85
 
 bindsym $mod+F6 exec ~/.config/sway/scripts/windows/toggle-opacity.sh
 
@@ -110,7 +111,6 @@ input "1386:20983:Wacom_Pen_and_multitouch_sensor_Finger" {
 bindsym --no-repeat $mod+shift+u fullscreen disable; exec $term -T "$popup-update-rebuild" -e bash -c '~/.config/sway/scripts/updaters/nixos-rebuild.sh'
 bindsym --no-repeat $mod+Shift+e fullscreen disable; exec $term -T "$popup-update-clean" -e bash -c '~/.config/sway/scripts/updaters/nixos-clean.sh'
 bindsym --no-repeat $mod+Shift+p fullscreen disable; exec $term -T "$popup-update-pixymon" -e bash -c '~/.config/sway/scripts/updaters/update-pixymon.sh'
-bindsym --no-repeat $mod+Shift+y fullscreen disable; exec $term -T "$popup-update-yt-playlist" -e bash -c '~/.config/sway/scripts/updaters/update-yt-playlist.sh'
 bindsym --no-repeat $mod+Shift+d fullscreen disable; exec $term -T "$popup-update-dvd" -e bash -c '~/.config/sway/scripts/updaters/rewrite-dvd-playlist.sh'
 bindsym --no-repeat $mod+Shift+t fullscreen disable; exec $term -T "$popup-settime" -e bash -c '~/.config/sway/scripts/settime.sh; echo; read -n 1 -rsp "Press any key to close..."'
 
@@ -130,6 +130,7 @@ bindsym --no-repeat $mod+Mod1+m fullscreen disable; exec prismlauncher
 bindsym --no-repeat $mod+Mod1+k fullscreen disable; exec kicad
 bindsym --no-repeat $mod+Mod1+b fullscreen disable; exec bambu-studio
 bindsym --no-repeat $mod+Mod1+f fullscreen disable; exec bash -c 'appimage-run /home/joel/Downloads/Apps/FreeCAD.AppImage'
+bindsym --no-repeat $mod+Mod1+y fullscreen disable; exec bash -c 'appimage-run /home/joel/Downloads/Apps/Antra.AppImage'
 
 bindsym --no-repeat $mod+Mod5+l fullscreen disable; exec $term -e bash -c 'prismlauncher --launch "1.21.9(1)"'
 bindsym --no-repeat $mod+Mod5+h fullscreen disable; exec $term -e bash -c 'prismlauncher --launch "1.21.4"'
