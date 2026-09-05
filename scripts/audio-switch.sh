@@ -23,7 +23,6 @@ ARGS=(
 ###############################################################################
 
 add_profile_button() {
-
     local label="$1"
     local profile="$2"
 
@@ -46,8 +45,6 @@ while IFS='|' read -r profile description available; do
 
       label="$description"
 
-      # Highest priority
-
       if [[ "$description" == *"Headphone"* ]]; then
           label="Headphones"
       fi
@@ -59,9 +56,6 @@ while IFS='|' read -r profile description available; do
       if [[ "$description" == *"Pro Audio"* ]]; then
           label="Pro Audio"
       fi
-
-      # Only process HDMI if we haven't already identified
-      # the profile as Headphones or Speaker.
 
       if [[ "$label" == "$description" ]] &&
          [[ "$description" == *"HDMI"* ]]; then
@@ -103,25 +97,17 @@ while IFS='|' read -r profile description available; do
 
 done < <(
     pactl list cards | awk '
-
     /^[[:space:]]*[A-Za-z0-9].*[[:space:]]\(sinks:/ {
-
         line=$0
-
         sub(/^[[:space:]]*/, "", line)
-
         split(line, parts, ": ")
         profile = parts[1]
-
         desc=line
         sub(/^[^:]*:[[:space:]]*/, "", desc)
         sub(/[[:space:]]+\(sinks:.*/, "", desc)
-
         avail="yes"
-
         if (line ~ /available:[[:space:]]*no/)
             avail="no"
-
         print profile "|" desc "|" avail
     }
     '
@@ -159,7 +145,6 @@ echo
 CURRENT_DESC="Current Sink"
 
 for entry in "${SINKS[@]}"; do
-
     sink="${entry%%|*}"
     desc="${entry#*|}"
 
@@ -169,7 +154,7 @@ for entry in "${SINKS[@]}"; do
     fi
 done
 
-echo "[0] Keep current sink ($CURRENT_DESC)"
+echo " Keep current sink ($CURRENT_DESC)"
 
 for i in "${!SINKS[@]}"; do
     desc="${SINKS[$i]#*|}"
@@ -180,30 +165,39 @@ echo
 read -rp "Select sink: " choice
 
 if [[ "$choice" == "0" ]]; then
-
-    echo
     echo "Keeping current sink."
-
 else
-
     index=$((choice - 1))
 
     if (( index < 0 || index >= ${#SINKS[@]} )); then
-
-        echo
         echo "Invalid selection."
         exit 1
     fi
 
     sink="${SINKS[$index]%%|*}"
+    
+    # 1. FIXED: Capture the exact volume string of the CURRENT physical sink before switching
+    # Using the static variable instead of the moving macro stops PipeWire from forcing a 0dB override on the Master channel.
+    PREVIOUS_VOLUME=$(pactl get-sink-volume "$CURRENT_SINK" 2>/dev/null | grep -Po '\d+(?=%)' | head -n 1 || echo "50")
 
+    # 2. ROUTE THE SYSTEM DEFAULT SINK NATIVELY
     pactl set-default-sink "$sink" >>"$ACTION_LOG" 2>&1
 
-    pactl list sink-inputs short |
-        awk '{print $1}' |
-        while read -r id; do
-            pactl move-sink-input "$id" "$sink" >>"$ACTION_LOG" 2>&1
-        done
+    # 3. DIRECT HARDWARE AUTOMATION
+    if [[ "$sink" == *"earpods-flat"* || "$sink" == *"cloud3-flat"* ]]; then
+        # TUNED MODE: Snap your verified hardware headphone sub-slider straight to 0dB Unity.
+        # This keeps the hardware unattenuated so the software filter graph matches measurements perfectly.
+        # We completely removed the 'Master' volume override to protect your system volume levels.
+        amixer -c 0 sset 'Headphone' 0dB >/dev/null 2>&1 || true
+    else
+        # DEFAULT MODE: Restore the overall snapshot volume percentage back down onto the target card channel.
+        pactl set-sink-volume "$sink" "${PREVIOUS_VOLUME}%" >>"$ACTION_LOG" 2>&1
+    fi
+
+    # 4. MIGRATE ALL RUNNING AUDIO STREAMS
+    pactl list sink-inputs short | awk '{print $1}' | while read -r id; do
+        pactl move-sink-input "$id" "$sink" >>"$ACTION_LOG" 2>&1
+    done
 fi
 
 ###############################################################################
@@ -215,7 +209,7 @@ fi
 
 rm -f "$RESULT_FILE" "$ACTION_LOG"
 
-pactl list cards | grep "Active Profile"
+pactl list cards | grep "Active Profile" || true
 
 echo
 echo "Current sink:"
@@ -223,3 +217,4 @@ pactl get-default-sink 2>/dev/null || true
 
 echo
 read -n 1 -rsp "Press any key to close..."
+
