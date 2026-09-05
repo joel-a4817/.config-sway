@@ -36,6 +36,7 @@ case "$MODE" in
             --audio-format mp3 \
             --audio-quality 0 \
             --force-overwrites \
+            --cookies-from-browser firefox:/home/joel/.config/glide/glide \
             -P ~/Downloads/Music \
             "https://youtube.com/playlist?list=PLPxzU5kNqyqU&si=LJw9jQ6tvBfz5qAe"
         ;;
@@ -50,6 +51,7 @@ case "$MODE" in
             --audio-format mp3 \
             --audio-quality 0 \
             --force-overwrites \
+            --cookies-from-browser firefox:/home/joel/.config/glide/glide \
             -P ~/Downloads/Music \
             "$URL"
         ;;
