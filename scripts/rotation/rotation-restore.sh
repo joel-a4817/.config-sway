@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OUT="$(swaymsg -t get_outputs -r | jq -r '.[] | select(.focused) | .name')"
+OUT="$(swaymsg -t get_outputs -r | jq -r '.[] | select(.focused) | .name' | head -n1)"
 
+[[ -n "$OUT" ]] || exit 1
+
+TRANSFORM="$(
+    swaymsg -t get_outputs -r |
+    jq -r --arg out "$OUT" '
+        .[] | select(.name==$out) | (.transform // "normal")
+    '
+)"
+
+[[ -n "$TRANSFORM" ]] || TRANSFORM="normal"
 need() { command -v "$1" >/dev/null 2>&1 || exit 1; }
 need swaymsg
 need jq
-
-# Capture current transform BEFORE reload
-TRANSFORM="$(swaymsg -t get_outputs -r \
-  | jq -r '.[] | select(.name=="'"$OUT"'") | (.transform // "normal")')"
 
 # Reload sway (this resets output + input state)
 swaymsg reload

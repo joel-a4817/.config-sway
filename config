@@ -65,7 +65,7 @@ for_window [app_id="$term"] opacity 0.85
 for_window [class="coda-qt"] opacity 0.85
 for_window [title="^Collabora Office"] opacity 0.85
 for_window [title="Collabora Office*"] opacity 0.85
-for_window [class="discord"] opacity 0.85
+for_window [app_id="discord"] opacity 0.85
 
 bindsym $mod+F6 exec ~/.config/sway/scripts/windows/toggle-opacity.sh
 
