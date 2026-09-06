@@ -4,6 +4,7 @@ set -euo pipefail
 
 RESULT_FILE="/tmp/audio-toggle-complete.$$"
 ACTION_LOG="/tmp/audio-toggle-action.$$"
+HEADPHONE_STATE="/tmp/headphone-volume.saved"
 
 rm -f "$RESULT_FILE" "$ACTION_LOG"
 touch "$ACTION_LOG"
@@ -15,7 +16,7 @@ CARD="$(pactl list cards short | awk 'NR==1 {print $2}')"
 ARGS=(
     -t warning
     -y overlay
-    -m "Audio Profile Selector"
+    -m "Audio Profile Select"
 )
 
 ###############################################################################
@@ -133,9 +134,38 @@ CURRENT_SINK="$(pactl get-default-sink 2>/dev/null || true)"
 
 mapfile -t SINKS < <(
     pactl list short sinks |
-    awk '{
-        print $2 "|" $2
-    }'
+    while read -r id sink rest; do
+
+        label="$sink"
+
+        case "$sink" in
+            earpods_fir)
+                label="EarPods FIR"
+                ;;
+
+            cloud3_fir)
+                label="Cloud III FIR"
+                ;;
+
+            *Headphones*)
+                label="Headphones"
+                ;;
+
+            *HDMI1*)
+                label="HDMI 1"
+                ;;
+
+            *HDMI2*)
+                label="HDMI 2"
+                ;;
+
+            *HDMI3*)
+                label="HDMI 3"
+                ;;
+        esac
+
+        echo "$sink|$label"
+    done
 )
 
 echo
@@ -154,7 +184,7 @@ for entry in "${SINKS[@]}"; do
     fi
 done
 
-echo " Keep current sink ($CURRENT_DESC)"
+echo "[0] Keep current sink ($CURRENT_DESC)"
 
 for i in "${!SINKS[@]}"; do
     desc="${SINKS[$i]#*|}"
@@ -176,24 +206,38 @@ else
 
     sink="${SINKS[$index]%%|*}"
     
-    # 1. FIXED: Capture the exact volume string of the CURRENT physical sink before switching
-    # Using the static variable instead of the moving macro stops PipeWire from forcing a 0dB override on the Master channel.
-    PREVIOUS_VOLUME=$(pactl get-sink-volume "$CURRENT_SINK" 2>/dev/null | grep -Po '\d+(?=%)' | head -n 1 || echo "50")
-
-    # 2. ROUTE THE SYSTEM DEFAULT SINK NATIVELY
+    # Set selected sink
     pactl set-default-sink "$sink" >>"$ACTION_LOG" 2>&1
 
-    # 3. DIRECT HARDWARE AUTOMATION
-    if [[ "$sink" == *"earpods-flat"* || "$sink" == *"cloud3-flat"* ]]; then
-        # TUNED MODE: Snap your verified hardware headphone sub-slider straight to 0dB Unity.
-        # This keeps the hardware unattenuated so the software filter graph matches measurements perfectly.
-        # We completely removed the 'Master' volume override to protect your system volume levels.
-        amixer -c 0 sset 'Headphone' 0dB >/dev/null 2>&1 || true
-    else
-        # DEFAULT MODE: Restore the overall snapshot volume percentage back down onto the target card channel.
-        pactl set-sink-volume "$sink" "${PREVIOUS_VOLUME}%" >>"$ACTION_LOG" 2>&1
-    fi
+    # If moving from a raw sink to a FIR sink, force Headphone to 100%
+    if [[ "$sink" == "earpods_fir" || "$sink" == "cloud3_fir" ]]; then
 
+        if [[ "$CURRENT_SINK" != "earpods_fir" &&
+              "$CURRENT_SINK" != "cloud3_fir" ]]; then
+
+            amixer -c 0 sget Headphone |
+            grep -Po '[0-9]+(?=%)' |
+            head -n1 > "$HEADPHONE_STATE"
+
+            amixer -c 0 sset Headphone 100% >/dev/null 2>&1 || true
+        fi
+
+    # If moving from a FIR sink back to a raw sink, restore Headphone volume
+    else
+
+        if [[ "$CURRENT_SINK" == "earpods_fir" ||
+              "$CURRENT_SINK" == "cloud3_fir" ]]; then
+
+            if [[ -f "$HEADPHONE_STATE" ]]; then
+                SAVED_VOL="$(cat "$HEADPHONE_STATE")"
+
+                amixer -c 0 sset Headphone "${SAVED_VOL}%" >/dev/null 2>&1 || true
+
+                rm -f "$HEADPHONE_STATE"
+            fi
+        fi
+
+    fi
     # 4. MIGRATE ALL RUNNING AUDIO STREAMS
     pactl list sink-inputs short | awk '{print $1}' | while read -r id; do
         pactl move-sink-input "$id" "$sink" >>"$ACTION_LOG" 2>&1
