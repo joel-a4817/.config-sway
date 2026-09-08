@@ -5,7 +5,6 @@ set -euo pipefail
 RESULT_FILE="/tmp/audio-toggle-complete.$$"
 ACTION_LOG="/tmp/audio-toggle-action.$$"
 HEADPHONE_STATE="/tmp/headphone-volume.saved"
-SINK_VOLUME_STATE="/tmp/default-sink-volume.saved"
 
 rm -f "$RESULT_FILE" "$ACTION_LOG"
 touch "$ACTION_LOG"
@@ -133,6 +132,8 @@ sleep 1
 
 CURRENT_SINK="$(pactl get-default-sink 2>/dev/null || true)"
 
+RANDOM_PICK=0
+
 mapfile -t SINKS < <(
     pactl list short sinks |
     while read -r id sink rest; do
@@ -140,16 +141,12 @@ mapfile -t SINKS < <(
         label="$sink"
 
         case "$sink" in
-            earpods_fir)
-                label="EarPods FIR"
-                ;;
-
-            cloud3_fir)
-                label="Cloud III FIR"
-                ;;
-
             *Headphones*)
                 label="Headphones"
+                ;;
+
+            *Speaker*)
+                label="Speaker"
                 ;;
 
             *HDMI1*)
@@ -192,40 +189,78 @@ for i in "${!SINKS[@]}"; do
     echo "[$((i + 1))] $desc"
 done
 
+EARPOD_RANDOM=$(( ${#SINKS[@]} + 1 ))
+CLOUD3_RANDOM=$(( ${#SINKS[@]} + 2 ))
+
+echo "[$EARPOD_RANDOM] Random EarPods"
+echo "[$CLOUD3_RANDOM] Random Cloud III"
 echo
 read -rp "Select sink: " choice
 
 if [[ "$choice" == "0" ]]; then
     echo "Keeping current sink."
 else
-    index=$((choice - 1))
+    EARPOD_RANDOM=$(( ${#SINKS[@]} + 1 ))
+    CLOUD3_RANDOM=$(( ${#SINKS[@]} + 2 ))
 
-    if (( index < 0 || index >= ${#SINKS[@]} )); then
-        echo "Invalid selection."
-        exit 1
+    if [[ "$choice" == "$EARPOD_RANDOM" ]]; then
+
+        mapfile -t RANDOM_CANDIDATES < <(
+            printf '%s\n' "${SINKS[@]}" |
+            cut -d'|' -f1 |
+            grep -E '^(earpods_fir.*|alsa_output.*Headphones.*)$'
+        )
+
+        sink="$(
+            printf '%s\n' "${RANDOM_CANDIDATES[@]}" |
+            shuf -n 1
+        )"
+ 
+        echo "Random EarPods sink selected."
+        RANDOM_PICK=1
+
+    elif [[ "$choice" == "$CLOUD3_RANDOM" ]]; then
+
+        mapfile -t RANDOM_CANDIDATES < <(
+            printf '%s\n' "${SINKS[@]}" |
+            cut -d'|' -f1 |
+            grep -E '^(cloud3_fir.*|alsa_output.*Headphones.*)$'
+        )
+
+        sink="$(
+            printf '%s\n' "${RANDOM_CANDIDATES[@]}" |
+            shuf -n 1
+        )"
+
+        echo "Random Cloud III sink selected."
+        RANDOM_PICK=1
+
+    else
+
+        index=$((choice - 1))
+
+        if (( index < 0 || index >= ${#SINKS[@]} )); then
+            echo "Invalid selection."
+            exit 1
+        fi
+
+        sink="${SINKS[$index]%%|*}"
+
     fi
-
-    sink="${SINKS[$index]%%|*}"
     
-    # Save current default sink volume before switching
-    pactl get-sink-volume @DEFAULT_SINK@ |
-    grep -Po '[0-9]+%' |
-    head -n1 > "$SINK_VOLUME_STATE"
-    # Set selected sink
-    pactl set-default-sink "$sink" >>"$ACTION_LOG" 2>&1
-    # Restore previous volume level onto the new default sink
-    if [[ -f "$SINK_VOLUME_STATE" ]]; then
-        SAVED_SINK_VOL="$(cat "$SINK_VOLUME_STATE")"
+    OLD_VOLUME="$(
+        pactl get-sink-volume "$CURRENT_SINK" |
+        grep -Po '[0-9]+%' |
+        head -n1
+    )"
 
-        pactl set-sink-volume @DEFAULT_SINK@ "$SAVED_SINK_VOL" \
-            >>"$ACTION_LOG" 2>&1 || true
-    fi
+    pactl set-default-sink "$sink" >>"$ACTION_LOG" 2>&1
 
     # If moving from a raw sink to a FIR sink, force Headphone to 100%
-    if [[ "$sink" == "earpods_fir" || "$sink" == "cloud3_fir" ]]; then
+    if [[ "$sink" == earpods_fir* || "$sink" == cloud3_fir* ]]; then
 
-        if [[ "$CURRENT_SINK" != "earpods_fir" &&
-              "$CURRENT_SINK" != "cloud3_fir" ]]; then
+        if [[ "$CURRENT_SINK" != earpods_fir* &&
+              "$CURRENT_SINK" != cloud3_fir* ]]; then
 
             amixer -c 0 sget Headphone |
             grep -Po '[0-9]+(?=%)' |
@@ -237,8 +272,8 @@ else
     # If moving from a FIR sink back to a raw sink, restore Headphone volume
     else
 
-        if [[ "$CURRENT_SINK" == "earpods_fir" ||
-              "$CURRENT_SINK" == "cloud3_fir" ]]; then
+        if [[ "$CURRENT_SINK" == earpods_fir* ||
+              "$CURRENT_SINK" == cloud3_fir* ]]; then
 
             if [[ -f "$HEADPHONE_STATE" ]]; then
                 SAVED_VOL="$(cat "$HEADPHONE_STATE")"
@@ -250,6 +285,13 @@ else
         fi
 
     fi
+
+    # Apply previous volume AFTER all FIR/raw gain changes
+    sleep 0.5
+
+    pactl set-sink-volume "$sink" "$OLD_VOLUME" \
+        >>"$ACTION_LOG" 2>&1 || true
+
     # 4. MIGRATE ALL RUNNING AUDIO STREAMS
     pactl list sink-inputs short | awk '{print $1}' | while read -r id; do
         pactl move-sink-input "$id" "$sink" >>"$ACTION_LOG" 2>&1
@@ -268,9 +310,13 @@ rm -f "$RESULT_FILE" "$ACTION_LOG"
 pactl list cards | grep "Active Profile" || true
 
 echo
-echo "Current sink:"
-pactl get-default-sink 2>/dev/null || true
 
+if (( RANDOM_PICK )); then
+    echo "The sink is a secret!"
+else
+    echo "Current sink:"
+    pactl get-default-sink 2>/dev/null || true
+fi
 echo
 read -n 1 -rsp "Press any key to close..."
 
