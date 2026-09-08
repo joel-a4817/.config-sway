@@ -5,6 +5,7 @@ set -euo pipefail
 RESULT_FILE="/tmp/audio-toggle-complete.$$"
 ACTION_LOG="/tmp/audio-toggle-action.$$"
 HEADPHONE_STATE="/tmp/headphone-volume.saved"
+SINK_VOLUME_STATE="/tmp/default-sink-volume.saved"
 
 rm -f "$RESULT_FILE" "$ACTION_LOG"
 touch "$ACTION_LOG"
@@ -206,8 +207,19 @@ else
 
     sink="${SINKS[$index]%%|*}"
     
+    # Save current default sink volume before switching
+    pactl get-sink-volume @DEFAULT_SINK@ |
+    grep -Po '[0-9]+%' |
+    head -n1 > "$SINK_VOLUME_STATE"
     # Set selected sink
     pactl set-default-sink "$sink" >>"$ACTION_LOG" 2>&1
+    # Restore previous volume level onto the new default sink
+    if [[ -f "$SINK_VOLUME_STATE" ]]; then
+        SAVED_SINK_VOL="$(cat "$SINK_VOLUME_STATE")"
+
+        pactl set-sink-volume @DEFAULT_SINK@ "$SAVED_SINK_VOL" \
+            >>"$ACTION_LOG" 2>&1 || true
+    fi
 
     # If moving from a raw sink to a FIR sink, force Headphone to 100%
     if [[ "$sink" == "earpods_fir" || "$sink" == "cloud3_fir" ]]; then
