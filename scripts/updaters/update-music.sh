@@ -392,7 +392,7 @@ if [[ "$mode" == "single" ]]; then
         echo "file not found:"
         echo "$input"
         echo
-        read -n 1 -rsp "press any key to close..."
+        read -n 1 -rsp "Press any key to close..."
         exit 1
     fi
 
@@ -517,4 +517,4 @@ done
 fi
 
 echo
-read -n 1 -rsp "press any key to close..."
+read -n 1 -rsp "Press any key to close..."
