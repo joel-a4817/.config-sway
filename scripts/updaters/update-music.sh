@@ -2,173 +2,226 @@
 
 set -euo pipefail
 
-RESULT_FILE="/tmp/music-eq-complete.$$"
-MODE_FILE="/tmp/music-eq-mode.$$"
+result_file="/tmp/music-eq-complete.$$"
+mode_file="/tmp/music-eq-mode.$$"
 
-rm -f "$RESULT_FILE" "$MODE_FILE"
+rm -f "$result_file" "$mode_file"
 
-export RESULT_FILE
-export MODE_FILE
+export result_file
+export mode_file
+
+
+copy_cover_and_tags() {
+    local original="$1"
+    local processed="$2"
+
+    [[ -f "$original" ]] || return 0
+    [[ -f "$processed" ]] || return 0
+
+    local tmp="${processed}.tmp.m4a"
+
+    ffmpeg -y \
+        -i "$processed" \
+        -i "$original" \
+        -map 0:a:0 \
+        -map 1:v:0? \
+        -map_metadata 1 \
+        -c:a copy \
+        -c:v copy \
+        -disposition:v attached_pic \
+        "$tmp"
+
+    mv "$tmp" "$processed"
+}
+
 
 swaynag \
     -t warning \
     -y overlay \
-    -m "music EQ" \
-    -z "Process Full Music Library" '
-echo full > "$MODE_FILE"
-touch "$RESULT_FILE"
+    -m "music eq" \
+    -z "process full music library" '
+echo full > "$mode_file"
+touch "$result_file"
 ' \
-    -z "Process Single Music File" '
-echo single > "$MODE_FILE"
-touch "$RESULT_FILE"
+    -z "process single music file" '
+echo single > "$mode_file"
+touch "$result_file"
 ' &
 
-while [[ ! -f "$RESULT_FILE" ]]; do
+while [[ ! -f "$result_file" ]]; do
     sleep 0.1
 done
 
-rm -f "$RESULT_FILE"
+rm -f "$result_file"
 
-MODE="$(cat "$MODE_FILE" 2>/dev/null || true)"
-rm -f "$MODE_FILE"
+mode="$(cat "$mode_file" 2>/dev/null || true)"
+rm -f "$mode_file"
 
-if [[ "$MODE" == "single" ]]; then
+if [[ "$mode" == "single" ]]; then
     echo
-    echo "Enter filename from favourites OR absolute path:"
-    read -r INPUT_ARG
+    echo "enter filename from favourites or absolute path:"
+    read -r input_arg
 
-    SRC="$HOME/Downloads/Music/favourites"
+    src="$HOME/Downloads/Music/favourites"
 
-    if [[ "$INPUT_ARG" = /* ]]; then
-      INPUT="$INPUT_ARG"
+    if [[ "$input_arg" = /* ]]; then
+      input="$input_arg"
     else
-        INPUT="$SRC/$INPUT_ARG"
+        input="$src/$input_arg"
     fi
 
-    if [[ ! -f "$INPUT" ]]; then
+    if [[ ! -f "$input" ]]; then
         echo
-        echo "File not found:"
-        echo "$INPUT"
+        echo "file not found:"
+        echo "$input"
         echo
         read -n 1 -rsp "Press any key to close..."
         exit 1
     fi
 
 echo
-echo "Selected:"
-echo "$INPUT"
+echo "selected:"
+echo "$input"
 
-BASENAME="$(basename "$INPUT")"
-STEM="${BASENAME%.*}"
+basename="$(basename "$input")"
+stem="${basename%.*}"
 
 covers_dir="$HOME/Downloads/Music/covers"
 mkdir -p "$covers_dir"
 
 ffmpeg -y \
-    -i "$INPUT" \
+    -i "$input" \
     -an \
     -map 0:v:0 \
     -frames:v 1 \
-    "$covers_dir/$STEM.png" \
+    "$covers_dir/$stem.png" \
     >/dev/null 2>&1 || true
 
-RATE="$(ffprobe \
+rate="$(ffprobe \
     -v error \
     -select_streams a:0 \
     -show_entries stream=sample_rate \
     -of default=noprint_wrappers=1:nokey=1 \
-    "$INPUT")"
+    "$input")"
 
-SOFA="$(find /nix/store -iname 'MIT_KEMAR_normal_pinna.sofa' -print -quit)"
+sofa="$(find /nix/store -iname 'mit_kemar_normal_pinna.sofa' -print -quit)"
 
-EARPODS_IR="$HOME/Documents/prefs/audio/output/earpods_stereo/earpods_stereo minimum phase ${RATE}Hz.wav"
-CLOUD3_IR="$HOME/Documents/prefs/audio/output/cloud3_stereo/cloud3_stereo minimum phase ${RATE}Hz.wav"
+earpods_ir="$HOME/Documents/prefs/audio/output/earpods_stereo/earpods_stereo minimum phase ${rate}Hz.wav"
+cloud3_ir="$HOME/Documents/prefs/audio/output/cloud3_stereo/cloud3_stereo minimum phase ${rate}Hz.wav"
 
-OUT="$HOME/Downloads/Music/test-output/$STEM"
+out_bs2b="$HOME/Downloads/Music/favourites eq/bs2b"
+out_earpods_fir="$HOME/Downloads/Music/favourites eq/earpods fir"
+out_cloud3_fir="$HOME/Downloads/Music/favourites eq/cloud3 fir"
 
-mkdir -p "$OUT"
+out_earpods_fir_bs2b="$HOME/Downloads/Music/favourites eq/earpods fir + bs2b"
+out_cloud3_fir_bs2b="$HOME/Downloads/Music/favourites eq/cloud3 fir + bs2b"
+
+out_sofalizer="$HOME/Downloads/Music/favourites eq/sofalizer"
+out_earpods_fir_sofalizer="$HOME/Downloads/Music/favourites eq/earpods fir + sofalizer"
+out_cloud3_fir_sofalizer="$HOME/Downloads/Music/favourites eq/cloud3 fir + sofalizer"
+
+mkdir -p "$out_bs2b"
+mkdir -p "$out_earpods_fir"
+mkdir -p "$out_cloud3_fir"
+mkdir -p "$out_earpods_fir_bs2b"
+mkdir -p "$out_cloud3_fir_bs2b"
+mkdir -p "$out_sofalizer"
+mkdir -p "$out_earpods_fir_sofalizer"
+mkdir -p "$out_cloud3_fir_sofalizer"
 
 echo
-echo "Input:"
-echo "$INPUT"
+echo "input:"
+echo "$input"
 echo
-echo "Rate:"
-echo "$RATE"
+echo "rate:"
+echo "$rate"
 echo
-echo "Output:"
-echo "$OUT"
+echo "output:"
+echo "$HOME/Downloads/Music/favourites eq"
 echo
 
 ffmpeg -y \
-    -i "$INPUT" \
+    -i "$input" \
     -vn \
     -af "bs2b=fcut=700:feed=115" \
     -c:a alac \
-    "$OUT/${STEM} - bs2b.m4a"
+    "$out_bs2b/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_bs2b/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
-    -i "$EARPODS_IR" \
+    -i "$input" \
+    -i "$earpods_ir" \
     -vn \
     -filter_complex "[0:a][1:a]afir" \
     -c:a alac \
-    "$OUT/${STEM} - earpods fir.m4a"
+    "$out_earpods_fir/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_earpods_fir/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
-    -i "$CLOUD3_IR" \
+    -i "$input" \
+    -i "$cloud3_ir" \
     -vn \
     -filter_complex "[0:a][1:a]afir" \
     -c:a alac \
-    "$OUT/${STEM} - cloud3 fir.m4a"
+    "$out_cloud3_fir/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_cloud3_fir/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
-    -i "$EARPODS_IR" \
+    -i "$input" \
+    -i "$earpods_ir" \
     -vn \
     -filter_complex "[0:a]bs2b=fcut=700:feed=115[b];[b][1:a]afir" \
     -c:a alac \
-    "$OUT/${STEM} - earpods fir + bs2b.m4a"
+    "$out_earpods_fir_bs2b/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_earpods_fir_bs2b/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
-    -i "$CLOUD3_IR" \
+    -i "$input" \
+    -i "$cloud3_ir" \
     -vn \
     -filter_complex "[0:a]bs2b=fcut=700:feed=115[b];[b][1:a]afir" \
     -c:a alac \
-    "$OUT/${STEM} - cloud3 fir + bs2b.m4a"
+    "$out_cloud3_fir_bs2b/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_cloud3_fir_bs2b/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
+    -i "$input" \
     -vn \
-    -af "sofalizer=sofa=$SOFA:gain=-9" \
-    -ar "$RATE" \
+    -af "sofalizer=sofa=$sofa:gain=-9" \
+    -ar "$rate" \
     -c:a alac \
-    "$OUT/${STEM} - sofalizer.m4a"
+    "$out_sofalizer/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_sofalizer/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
-    -i "$EARPODS_IR" \
+    -i "$input" \
+    -i "$earpods_ir" \
     -vn \
-    -filter_complex "sofalizer=sofa=$SOFA:gain=-9[s];[s][1:a]afir" \
-    -ar "$RATE" \
+    -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
+    -ar "$rate" \
     -c:a alac \
-    "$OUT/${STEM} - earpods fir + sofalizer.m4a"
+    "$out_earpods_fir_sofalizer/${stem}.m4a"
+
+copy_cover_and_tags "$input" "$out_earpods_fir_sofalizer/${stem}.m4a"
 
 ffmpeg -y \
-    -i "$INPUT" \
-    -i "$CLOUD3_IR" \
+    -i "$input" \
+    -i "$cloud3_ir" \
     -vn \
-    -filter_complex "sofalizer=sofa=$SOFA:gain=-9[s];[s][1:a]afir" \
-    -ar "$RATE" \
+    -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
+    -ar "$rate" \
     -c:a alac \
-    "$OUT/${STEM} - cloud3 fir + sofalizer.m4a"
+    "$out_cloud3_fir_sofalizer/${stem}.m4a"
 
-echo
-echo "Output folder:"
-echo "$OUT"
+copy_cover_and_tags "$input" "$out_cloud3_fir_sofalizer/${stem}.m4a"
 
-elif [[ "$MODE" == "full" ]]; then
+elif [[ "$mode" == "full" ]]; then
 
 music_dir="$HOME/Downloads/Music/favourites"
 covers_dir="$HOME/Downloads/Music/covers"
@@ -197,7 +250,7 @@ done
 
 src="$HOME/Downloads/Music/favourites"
 
-SOFA="$(find /nix/store -iname 'MIT_KEMAR_normal_pinna.sofa' -print -quit)"
+sofa="$(find /nix/store -iname 'mit_kemar_normal_pinna.sofa' -print -quit)"
 
 out_earpods_fir="$HOME/Downloads/Music/favourites eq/earpods fir"
 out_cloud3_fir="$HOME/Downloads/Music/favourites eq/cloud3 fir"
@@ -254,6 +307,8 @@ process_file() {
         -c:a alac \
         "$out_bs2b/${stem}.m4a"
 
+    copy_cover_and_tags "$input" "$out_bs2b/${stem}.m4a"
+
     # earpods fir only
     ffmpeg -y \
         -i "$input" \
@@ -262,6 +317,8 @@ process_file() {
         -filter_complex "[0:a][1:a]afir" \
         -c:a alac \
         "$out_earpods_fir/${stem}.m4a"
+
+    copy_cover_and_tags "$input" "$out_earpods_fir/${stem}.m4a"
 
     # cloud3 fir only
     ffmpeg -y \
@@ -272,6 +329,8 @@ process_file() {
         -c:a alac \
         "$out_cloud3_fir/${stem}.m4a"
 
+    copy_cover_and_tags "$input" "$out_cloud3_fir/${stem}.m4a"
+
     # earpods fir + bs2b
     ffmpeg -y \
         -i "$input" \
@@ -280,6 +339,8 @@ process_file() {
         -filter_complex "[0:a]bs2b=fcut=700:feed=115[b];[b][1:a]afir" \
         -c:a alac \
         "$out_earpods_fir_bs2b/${stem}.m4a"
+
+    copy_cover_and_tags "$input" "$out_earpods_fir_bs2b/${stem}.m4a"
 
     # cloud3 fir + bs2b
     ffmpeg -y \
@@ -290,31 +351,39 @@ process_file() {
         -c:a alac \
         "$out_cloud3_fir_bs2b/${stem}.m4a"
 
+    copy_cover_and_tags "$input" "$out_cloud3_fir_bs2b/${stem}.m4a"
+
     # sofalizer only
     ffmpeg -y \
         -i "$input" \
         -vn \
-        -af "sofalizer=sofa=$SOFA:gain=-9" \
+        -af "sofalizer=sofa=$sofa:gain=-9" \
         -c:a alac \
         "$out_sofalizer/${stem}.m4a"
+
+    copy_cover_and_tags "$input" "$out_sofalizer/${stem}.m4a"
 
     # earpods fir + sofalizer
     ffmpeg -y \
         -i "$input" \
         -i "$earpods_ir" \
         -vn \
-        -filter_complex "sofalizer=sofa=$SOFA:gain=-9[s];[s][1:a]afir" \
+        -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
         -c:a alac \
         "$out_earpods_fir_sofalizer/${stem}.m4a"
+
+    copy_cover_and_tags "$input" "$out_earpods_fir_sofalizer/${stem}.m4a"
 
     # cloud3 fir + sofalizer
     ffmpeg -y \
         -i "$input" \
         -i "$cloud3_ir" \
         -vn \
-        -filter_complex "sofalizer=sofa=$SOFA:gain=-9[s];[s][1:a]afir" \
+        -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
         -c:a alac \
         "$out_cloud3_fir_sofalizer/${stem}.m4a"
+
+    copy_cover_and_tags "$input" "$out_cloud3_fir_sofalizer/${stem}.m4a"
 }
 
 mapfile -d '' files < <(
