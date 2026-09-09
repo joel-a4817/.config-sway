@@ -61,6 +61,17 @@ echo "$INPUT"
 BASENAME="$(basename "$INPUT")"
 STEM="${BASENAME%.*}"
 
+covers_dir="$HOME/Downloads/Music/covers"
+mkdir -p "$covers_dir"
+
+ffmpeg -y \
+    -i "$INPUT" \
+    -an \
+    -map 0:v:0 \
+    -frames:v 1 \
+    "$covers_dir/$STEM.png" \
+    >/dev/null 2>&1 || true
+
 RATE="$(ffprobe \
     -v error \
     -select_streams a:0 \
