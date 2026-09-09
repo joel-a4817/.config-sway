@@ -34,102 +34,37 @@ bs2b_feed="45"
 
 # maximum gain
 
-get_max_volume() {
+get_chain_gain() {
     local input="$1"
 
-    ffmpeg -hide_banner \
-        -i "$input" \
-        -af volumedetect \
-        -f null - 2>&1 |
-    awk -F': ' '
-        /max_volume/ {
-            gsub(/ dB/, "", $2)
-            print $2
-            exit
-        }
-    '
-}
+    local peak
 
-find_chain_gain() {
-    local input="$1"
-    local rate="$2"
-    local ir="${3:-}"
+    peak="$(
+        ffmpeg -hide_banner \
+            -i "$input" \
+            -af "${sofa_filter},astats=metadata=1:reset=0" \
+            -f null - 2>&1 |
+        awk -F': ' '
+            /Peak level dB/ {
+                peak=$2
+            }
+            END {
+                print peak
+            }
+        '
+    )"
+        awk -v p="$peak" '
+            BEGIN {
+                g = -p
 
-    local gain=0
-    local low high mid
-    local log
-    local tmp
-    local filter
+                g = int(g * 10) / 10.0
 
-    tmp="$(mktemp --suffix=.m4a)"
-    log="$(mktemp)"
+                if (g > -p)
+                    g -= 0.1
 
-    render_test() {
-
-        filter="${sofa_filter/gain=${sofa_gain}/gain=$1}"
-
-        if [[ -z "$ir" ]]; then
-
-            ffmpeg -hide_banner -loglevel warning -y \
-                -i "$input" \
-                -vn \
-                -af "$filter" \
-                -ar "$rate" \
-                -c:a alac \
-                "$tmp" \
-                >"$log" 2>&1
-
-        else
-
-            ffmpeg -hide_banner -loglevel warning -y \
-                -i "$input" \
-                -i "$ir" \
-                -vn \
-                -filter_complex "${filter}[s];[s][1:a]afir" \
-                -ar "$rate" \
-                -c:a alac \
-                "$tmp" \
-                >"$log" 2>&1
-
-        fi
-    }
-
-    while :; do
-
-        render_test "$gain"
-
-        if grep -q "Please reduce gain" "$log"; then
-            gain="$(awk -v g="$gain" 'BEGIN{printf "%.1f\n", g-1.0}')"
-        else
-            break
-        fi
-
-    done
-
-    low="$gain"
-    high="$(awk -v g="$gain" 'BEGIN{printf "%.1f\n", g+1.0}')"
-
-    while awk -v l="$low" -v h="$high" '
-        BEGIN { exit !((h-l) > 0.1) }
-    '; do
-
-        mid="$(awk -v l="$low" -v h="$high" '
-            BEGIN { printf "%.2f\n", (l+h)/2 }
-        ')"
-
-        render_test "$mid"
-
-        if grep -q "Please reduce gain" "$log"; then
-            high="$mid"
-        else
-            low="$mid"
-        fi
-
-    done
-
-    rm -f "$tmp" "$log"
-
-    printf "%.1f\n" "$low"
+                printf "%.1f\n", g
+            }
+        '
 }
 
 sofa_gain="0"
@@ -349,7 +284,7 @@ process_file() {
     # sofalizer only
     if selected 6; then
 
-        gain="$(find_chain_gain "$input" "$rate")"
+      gain="$(get_chain_gain "$input")"
 
         echo "    final gain: ${gain} dB"
 
@@ -370,7 +305,7 @@ process_file() {
     # earpods fir + sofalizer
     if selected 7; then
 
-        gain="$(find_chain_gain "$input" "$rate" "$earpods_ir")"
+        gain="$(get_chain_gain "$input")"
 
         echo "    final gain: ${gain} dB"
 
@@ -393,7 +328,7 @@ process_file() {
     # cloud3 fir + sofalizer
     if selected 8; then
         
-        gain="$(find_chain_gain "$input" "$rate" "$cloud3_ir")"
+        gain="$(get_chain_gain "$input")"
 
         echo "    final gain: ${gain} dB"
 
