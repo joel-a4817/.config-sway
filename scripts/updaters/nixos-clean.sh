@@ -5,6 +5,8 @@ set -euo pipefail
 RESULT_FILE="/tmp/nixos-clean-complete.$$"
 rm -f "$RESULT_FILE"
 
+export RESULT_FILE
+
 swaynag \
     -t warning \
     -y overlay \
