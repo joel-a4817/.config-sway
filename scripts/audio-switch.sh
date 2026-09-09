@@ -257,11 +257,9 @@ else
     pactl set-default-sink "$sink" >>"$ACTION_LOG" 2>&1
 
     # If moving from a raw sink to a FIR sink, force Headphone to 100%
-    if [[ "$sink" == earpods_fir* || "$sink" == cloud3_fir* ]]; then
+    if [[ "$sink" =~ ^(earpods_|cloud3_) ]]; then
 
-        if [[ "$CURRENT_SINK" != earpods_fir* &&
-              "$CURRENT_SINK" != cloud3_fir* ]]; then
-
+        if [[ ! "$CURRENT_SINK" =~ ^(earpods_|cloud3_) ]]; then
             amixer -c 0 sget Headphone |
             grep -Po '[0-9]+(?=%)' |
             head -n1 > "$HEADPHONE_STATE"
@@ -272,8 +270,7 @@ else
     # If moving from a FIR sink back to a raw sink, restore Headphone volume
     else
 
-        if [[ "$CURRENT_SINK" == earpods_fir* ||
-              "$CURRENT_SINK" == cloud3_fir* ]]; then
+        if [[ "$CURRENT_SINK" =~ ^(earpods_|cloud3_) ]]; then
 
             if [[ -f "$HEADPHONE_STATE" ]]; then
                 SAVED_VOL="$(cat "$HEADPHONE_STATE")"
