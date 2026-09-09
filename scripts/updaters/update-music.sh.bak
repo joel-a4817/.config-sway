@@ -11,69 +11,6 @@ export result_file
 export mode_file
 
 
-# ==================================================
-# DSP SETTINGS
-# ==================================================
-
-SOFA="$(find /nix/store -iname 'mit_kemar_normal_pinna.sofa' -print -quit)"
-
-# BS2B
-BS2B_FCUT="700"
-BS2B_FEED="45"
-
-# ==================================================
-# SOFALIZER SETTINGS
-# ==================================================
-
-SOFA_GAIN="-9"
-
-# Position
-SOFA_ROTATION="0"
-SOFA_ELEVATION="0"
-SOFA_RADIUS="1"
-
-# Processing
-SOFA_TYPE="freq"
-SOFA_FRAMESIZE="1024"
-
-# HRTF behaviour
-SOFA_NORMALIZE="true"
-SOFA_INTERPOLATE="false"
-SOFA_MINPHASE="false"
-
-# Neighbor search
-SOFA_ANGLESTEP="0.5"
-SOFA_RADSTEP="0.01"
-
-# LFE
-SOFA_LFEGAIN="0"
-
-# Leave empty to use the built-in speaker layout
-SOFA_SPEAKERS=""
-
-# ==================================================
-# BUILD FILTER
-# ==================================================
-
-SOFA_FILTER="sofalizer=\
-sofa=$SOFA:\
-gain=${SOFA_GAIN}:\
-rotation=${SOFA_ROTATION}:\
-elevation=${SOFA_ELEVATION}:\
-radius=${SOFA_RADIUS}:\
-type=${SOFA_TYPE}:\
-lfegain=${SOFA_LFEGAIN}:\
-framesize=${SOFA_FRAMESIZE}:\
-normalize=${SOFA_NORMALIZE}:\
-interpolate=${SOFA_INTERPOLATE}:\
-minphase=${SOFA_MINPHASE}:\
-anglestep=${SOFA_ANGLESTEP}:\
-radstep=${SOFA_RADSTEP}"
-
-if [[ -n "$SOFA_SPEAKERS" ]]; then
-    SOFA_FILTER="${SOFA_FILTER}:speakers=${SOFA_SPEAKERS}"
-fi
-
 copy_cover_and_tags() {
     local original="$1"
     local processed="$2"
@@ -167,6 +104,8 @@ rate="$(ffprobe \
     -of default=noprint_wrappers=1:nokey=1 \
     "$input")"
 
+sofa="$(find /nix/store -iname 'mit_kemar_normal_pinna.sofa' -print -quit)"
+
 earpods_ir="$HOME/Documents/prefs/audio/output/earpods_stereo/earpods_stereo minimum phase ${rate}Hz.wav"
 cloud3_ir="$HOME/Documents/prefs/audio/output/cloud3_stereo/cloud3_stereo minimum phase ${rate}Hz.wav"
 
@@ -204,7 +143,7 @@ echo
 ffmpeg -y \
     -i "$input" \
     -vn \
-    -af "bs2b=fcut=${BS2B_FCUT}:feed=${BS2B_FEED}" \
+    -af "bs2b=fcut=700:feed=45" \
     -c:a alac \
     "$out_bs2b/${stem}.m4a"
 
@@ -234,7 +173,7 @@ ffmpeg -y \
     -i "$input" \
     -i "$earpods_ir" \
     -vn \
-    -filter_complex "[0:a]bs2b=fcut=${BS2B_FCUT}:feed=${BS2B_FEED}[b];[b][1:a]afir" \
+    -filter_complex "[0:a]bs2b=fcut=700:feed=45[b];[b][1:a]afir" \
     -c:a alac \
     "$out_earpods_fir_bs2b/${stem}.m4a"
 
@@ -244,7 +183,7 @@ ffmpeg -y \
     -i "$input" \
     -i "$cloud3_ir" \
     -vn \
-    -filter_complex "[0:a]bs2b=fcut=${BS2B_FCUT}:feed=${BS2B_FEED}[b];[b][1:a]afir" \
+    -filter_complex "[0:a]bs2b=fcut=700:feed=45[b];[b][1:a]afir" \
     -c:a alac \
     "$out_cloud3_fir_bs2b/${stem}.m4a"
 
@@ -253,7 +192,7 @@ copy_cover_and_tags "$input" "$out_cloud3_fir_bs2b/${stem}.m4a"
 ffmpeg -y \
     -i "$input" \
     -vn \
-    -af "${SOFA_FILTER}" \
+    -af "sofalizer=sofa=$sofa:gain=-9" \
     -ar "$rate" \
     -c:a alac \
     "$out_sofalizer/${stem}.m4a"
@@ -264,7 +203,7 @@ ffmpeg -y \
     -i "$input" \
     -i "$earpods_ir" \
     -vn \
-    -filter_complex "${SOFA_FILTER}[s];[s][1:a]afir" \
+    -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
     -ar "$rate" \
     -c:a alac \
     "$out_earpods_fir_sofalizer/${stem}.m4a"
@@ -275,7 +214,7 @@ ffmpeg -y \
     -i "$input" \
     -i "$cloud3_ir" \
     -vn \
-    -filter_complex "${SOFA_FILTER}[s];[s][1:a]afir" \
+    -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
     -ar "$rate" \
     -c:a alac \
     "$out_cloud3_fir_sofalizer/${stem}.m4a"
@@ -310,6 +249,8 @@ while ifs= read -r -d '' file; do
 done
 
 src="$HOME/Downloads/Music/favourites"
+
+sofa="$(find /nix/store -iname 'mit_kemar_normal_pinna.sofa' -print -quit)"
 
 out_earpods_fir="$HOME/Downloads/Music/favourites eq/earpods fir"
 out_cloud3_fir="$HOME/Downloads/Music/favourites eq/cloud3 fir"
@@ -362,7 +303,7 @@ process_file() {
     ffmpeg -y \
         -i "$input" \
         -vn \
-        -af "bs2b=fcut=${BS2B_FCUT}:feed=${BS2B_FEED}" \
+        -af "bs2b=fcut=700:feed=45" \
         -c:a alac \
         "$out_bs2b/${stem}.m4a"
 
@@ -395,7 +336,7 @@ process_file() {
         -i "$input" \
         -i "$earpods_ir" \
         -vn \
-        -filter_complex "[0:a]bs2b=fcut=${BS2B_FCUT}:feed=${BS2B_FEED}[b];[b][1:a]afir" \
+        -filter_complex "[0:a]bs2b=fcut=700:feed=45[b];[b][1:a]afir" \
         -c:a alac \
         "$out_earpods_fir_bs2b/${stem}.m4a"
 
@@ -406,7 +347,7 @@ process_file() {
         -i "$input" \
         -i "$cloud3_ir" \
         -vn \
-        -filter_complex "[0:a]bs2b=fcut=${BS2B_FCUT}:feed=${BS2B_FEED}[b];[b][1:a]afir" \
+        -filter_complex "[0:a]bs2b=fcut=700:feed=45[b];[b][1:a]afir" \
         -c:a alac \
         "$out_cloud3_fir_bs2b/${stem}.m4a"
 
@@ -416,7 +357,7 @@ process_file() {
     ffmpeg -y \
         -i "$input" \
         -vn \
-        -af "${SOFA_FILTER}" \
+        -af "sofalizer=sofa=$sofa:gain=-9" \
         -c:a alac \
         "$out_sofalizer/${stem}.m4a"
 
@@ -427,7 +368,7 @@ process_file() {
         -i "$input" \
         -i "$earpods_ir" \
         -vn \
-        -filter_complex "${SOFA_FILTER}[s];[s][1:a]afir" \
+        -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
         -c:a alac \
         "$out_earpods_fir_sofalizer/${stem}.m4a"
 
@@ -438,7 +379,7 @@ process_file() {
         -i "$input" \
         -i "$cloud3_ir" \
         -vn \
-        -filter_complex "${SOFA_FILTER}[s];[s][1:a]afir" \
+        -filter_complex "sofalizer=sofa=$sofa:gain=-9[s];[s][1:a]afir" \
         -c:a alac \
         "$out_cloud3_fir_sofalizer/${stem}.m4a"
 
