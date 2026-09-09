@@ -17,6 +17,16 @@ ffmpeg_opts=(
 )
 
 profile_selection=""
+sofa_track_gain=""
+
+get_sofa_gain() {
+    local input="$1"
+
+    if [[ -z "$sofa_track_gain" ]]; then
+        sofa_track_gain="$(get_chain_gain "$input")"
+        echo "    final gain: ${sofa_track_gain} dB"
+    fi
+}
 
 # ==================================================
 # dsp settings
@@ -183,6 +193,8 @@ selected() {
 process_file() {
     local input="$1"
 
+    sofa_track_gain=""
+
     local file_basename
     file_basename="$(basename "$input")"
 
@@ -213,7 +225,7 @@ process_file() {
             -i "$input" \
             -i "$earpods_ir" \
             -vn \
-            -filter_complex "[0:a][1:a]afir" \
+            -filter_complex "[0:a][1:a]afir=irnorm=-1" \
             -c:a alac \
             "$out_earpods_fir/${stem}.m4a"
 
@@ -228,7 +240,7 @@ process_file() {
             -i "$input" \
             -i "$cloud3_ir" \
             -vn \
-            -filter_complex "[0:a][1:a]afir" \
+            -filter_complex "[0:a][1:a]afir=irnorm=-1" \
             -c:a alac \
             "$out_cloud3_fir/${stem}.m4a"
 
@@ -257,7 +269,7 @@ process_file() {
             -i "$input" \
             -i "$earpods_ir" \
             -vn \
-            -filter_complex "[0:a]bs2b=fcut=${bs2b_fcut}:feed=${bs2b_feed}[b];[b][1:a]afir" \
+            -filter_complex "[0:a]bs2b=fcut=${bs2b_fcut}:feed=${bs2b_feed}[b];[b][1:a]afir=irnorm=-1" \
             -c:a alac \
             "$out_earpods_fir_bs2b/${stem}.m4a"
 
@@ -272,7 +284,7 @@ process_file() {
             -i "$input" \
             -i "$cloud3_ir" \
             -vn \
-            -filter_complex "[0:a]bs2b=fcut=${bs2b_fcut}:feed=${bs2b_feed}[b];[b][1:a]afir" \
+            -filter_complex "[0:a]bs2b=fcut=${bs2b_fcut}:feed=${bs2b_feed}[b];[b][1:a]afir=irnorm=-1" \
             -c:a alac \
             "$out_cloud3_fir_bs2b/${stem}.m4a"
 
@@ -284,9 +296,8 @@ process_file() {
     # sofalizer only
     if selected 6; then
 
-      gain="$(get_chain_gain "$input")"
-
-        echo "    final gain: ${gain} dB"
+        get_sofa_gain "$input"
+        gain="$sofa_track_gain"
 
         filter="${sofa_filter/gain=${sofa_gain}/gain=${gain}}"
 
@@ -305,9 +316,8 @@ process_file() {
     # earpods fir + sofalizer
     if selected 7; then
 
-        gain="$(get_chain_gain "$input")"
-
-        echo "    final gain: ${gain} dB"
+        get_sofa_gain "$input"
+        gain="$sofa_track_gain"
 
         filter="${sofa_filter/gain=${sofa_gain}/gain=${gain}}"
 
@@ -315,7 +325,7 @@ process_file() {
             -i "$input" \
             -i "$earpods_ir" \
             -vn \
-            -filter_complex "${filter}[s];[s][1:a]afir" \
+            -filter_complex "${filter}[s];[s][1:a]afir=irnorm=-1" \
             -ar "$rate" \
             -c:a alac \
             "$out_earpods_fir_sofalizer/${stem}.m4a"
@@ -328,9 +338,8 @@ process_file() {
     # cloud3 fir + sofalizer
     if selected 8; then
         
-        gain="$(get_chain_gain "$input")"
-
-        echo "    final gain: ${gain} dB"
+        get_sofa_gain "$input"
+        gain="$sofa_track_gain"
 
         filter="${sofa_filter/gain=${sofa_gain}/gain=${gain}}"
 
@@ -338,7 +347,7 @@ process_file() {
             -i "$input" \
             -i "$cloud3_ir" \
             -vn \
-            -filter_complex "${filter}[s];[s][1:a]afir" \
+            -filter_complex "${filter}[s];[s][1:a]afir=irnorm=-1" \
             -ar "$rate" \
             -c:a alac \
             "$out_cloud3_fir_sofalizer/${stem}.m4a"
@@ -397,8 +406,6 @@ if [[ "$mode" == "single" ]]; then
     fi
 
 echo
-echo "selected:"
-echo "$input"
 
 file_basename="$(basename "$input")"
 stem="${file_basename%.*}"
@@ -411,12 +418,6 @@ ffmpeg "${ffmpeg_opts[@]}" -y \
     "$covers_dir/$stem.png" \
     >/dev/null 2>&1 || true
 
-echo
-echo "input:"
-echo "$input"
-echo "output:"
-
-echo "$HOME/Downloads/Music/favourites eq"
 echo
 
 profile_selection="1,2,3,4,5,6,7,8"
