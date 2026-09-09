@@ -89,7 +89,7 @@ sofa_type="freq"
 sofa_framesize="1024"
 
 # hrtf behaviour
-sofa_normalize="false" #default = true
+sofa_normalize="true"
 sofa_interpolate="false"
 sofa_minphase="false"
 
@@ -98,9 +98,9 @@ sofa_anglestep="0.5"
 sofa_radstep="0.01"
 
 # lfe
-sofa_lfegain="0"
+sofa_lfegain="0" #cannot use on stereo files
 
-# leave empty to use the built-in speaker layout
+# leave empty is default
 sofa_speakers=""
 
 # ==================================================
